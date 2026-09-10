@@ -1,0 +1,20 @@
+[
+  {
+    "id": "tx-1",
+    "userId": "user-123",
+    "amount": 25000,
+    "type": "expense",
+    "category": "Makanan",
+    "description": "Nasi Goreng",
+    "createdAt": "2026-09-01T10:00:00.000Z"
+  },
+  {
+    "id": "tx-2",
+    "userId": "user-123",
+    "amount": 100000,
+    "type": "income",
+    "category": "Penjualan",
+    "description": "Penjualan harian",
+    "createdAt": "2026-09-02T12:30:00.000Z"
+  }
+]

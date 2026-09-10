@@ -1,0 +1,154 @@
+{
+  "audit_timestamp": "2026-09-09T00:00:00+07:00",
+  "codebase": "/d/coding/sikasir-ai/functions/src/index.ts",
+  "findings": [
+    {
+      "id": "AUTH-001",
+      "severity": "CRITICAL",
+      "category": "Authentication",
+      "file": "index.ts",
+      "endpoints": ["aiExtractReceipt", "aiExtractVoice", "aiStudioEnhanceImage", "aiStudioGenerateCaption", "aiHkiPreValuation", "aiAssistantChat", "aiIncrementUsage", "saveTransactionAfterReview"],
+      "issue": "All 8 https.onRequest endpoints lack authentication/authorization validation. req.auth is never checked before processing requests. Any unauthenticated caller can invoke any function.",
+      "remediation": "Add Firebase Auth middleware to verify ID token and extract uid. Reject requests without valid auth token with 401/403.",
+      "example": "if (!req.headers.authorization?.startsWith('Bearer ')) { res.status(401).json({error: 'Unauthenticated'}); return; } const decoded = admin.auth().verifyIdToken(req.headers.authorization.split('Bearer ')[1]);"
+    },
+    {
+      "id": "AUTH-002",
+      "severity": "CRITICAL",
+      "category": "Authentication",
+      "file": "index.ts",
+      "endpoints": ["saveTransactionAfterReview"],
+      "issue": "saveTransactionAfterReview uses (req as any).auth?.uid without validating auth first. If auth is missing, uid will be null, potentially allowing anonymous transaction creation.",
+      "remediation": "Validate auth before use; reject if no valid auth token present.",
+      "example": "Add auth check at function entry before accessing req.auth"
+    },
+    {
+      "id": "AUTH-003",
+      "severity": "HIGH",
+      "category": "Authorization",
+      "file": "index.ts",
+      "endpoints": ["aiStudioEnhanceImage", "aiHkiPreValuation", "aiAssistantChat"],
+      "issue": "These endpoints accept businessId from request payload without validating that the authenticated user owns that business. Any user can provide any businessId and operate on it.",
+      "remediation": "Query Firestore to verify the authenticated uid owns the businessId, or use Firestore security rules with proper ownership paths.",
+      "example": "const businessRef = db.collection('businesses').doc(parsed.businessId); const snap = await businessRef.get(); if (!snap.exists || snap.data().uid !== decoded.uid) { res.status(403).json({error: 'Forbidden'}); return; }"
+    },
+    {
+      "id": "AUTH-004",
+      "severity": "HIGH",
+      "category": "Authorization",
+      "file": "index.ts",
+      "endpoints": ["aiIncrementUsage"],
+      "issue": "aiIncrementUsage writes to ai_usage collection with businessId from payload without user isolation. Any user can increment usage counts for any business, potentially manipulating usage metrics.",
+      "remediation": "Include decoded uid in the Firestore document and/or validate business ownership before writing.",
+      "example": "await db.collection('ai_usage').add({ businessId: parsed.businessId, uid: decoded.uid, feature: parsed.feature, count: admin.firestore.FieldValue.increment(1), createdAt: admin.firestore.FieldValue.serverTimestamp() });"
+    },
+    {
+      "id": "AUTH-005",
+      "severity": "HIGH",
+      "category": "Authorization",
+      "file": "index.ts",
+      "endpoints": ["aiExtractReceipt", "aiExtractVoice"],
+      "issue": "These OCR endpoints accept image/voice data with no business context or user isolation. Any user can submit media for processing with arbitrary businessId.",
+      "remediation": "Require businessId from authenticated user context, not from client payload, or validate ownership.",
+      "example": "Extract business from auth token / session, require it in the schema but verify it matches the authenticated user's business."
+    },
+    {
+      "id": "VALIDATION-001",
+      "severity": "MEDIUM",
+      "category": "Input Validation",
+      "file": "index.ts",
+      "endpoints": ["aiStudioEnhanceImage"],
+      "issue": "enhanceSchema uses z.any() for image field, accepting arbitrary data without type validation. This could allow malformed or oversized payloads to be processed.",
+      "remediation": "Define a specific schema for the image/multipart data, limit size, validate content type.",
+      "example": "z.instanceof(File) or z.object({ mimeType: z.string(), size: z.number() })"
+    },
+    {
+      "id": "VALIDATION-002",
+      "severity": "MEDIUM",
+      "category": "Input Validation",
+      "file": "index.ts",
+      "endpoints": ["aiStudioGenerateCaption"],
+      "issue": "The category and platform enums are constrained, but no validation of actual content values. Empty strings or extremely long strings could be passed.",
+      "remediation": "Add string length limits and non-empty validation.",
+      "example": "z.string().min(1).max(100)"
+    },
+    {
+      "id": "VALIDATION-003",
+      "severity": "MEDIUM",
+      "category": "Input Validation",
+      "file": "index.ts",
+      "endpoints": ["aiHkiPreValuation"],
+      "issue": "creationDate is accepted as z.string() without format validation. Could allow invalid date formats or injection.",
+      "remediation": "Validate creationDate as a proper ISO date format, or convert to Date object and validate.",
+      "example": "z.string().refine((val) => !isNaN(new Date(val)), { message: 'Invalid date format' })"
+    },
+    {
+      "id": "VALIDATION-004",
+      "severity": "LOW",
+      "category": "Input Validation",
+      "file": "index.ts",
+      "endpoints": ["aiStudioEnhanceImage", "aiStudioGenerateCaption", "aiHkiPreValuation"],
+      "issue": "Date.now() used for generating IDs (studioAssetId, originalMediaAssetId, resultMediaAssetId, valuationId, captions). While not a security bug per se, predictable IDs could enable enumeration attacks.",
+      "remediation": "Use random UUIDs or Firebase-generated document IDs instead of sequential Date.now() values.",
+      "example": "import { v4 as uuidv4 } from 'uuid'; studioAssetId: uuidv4()"
+    },
+    {
+      "id": "ERROR-HANDLING-001",
+      "severity": "MEDIUM",
+      "category": "Error Handling",
+      "file": "index.ts",
+      "endpoints": ["All endpoints"],
+      "issue": "All catch blocks return raw Error messages: `res.status(400).json({ error: (err as Error).message })`. This could leak internal stack traces, database details, or implementation specifics to clients.",
+      "remediation": "Return generic error messages to clients; log full errors server-side. Use error codes instead of raw messages.",
+      "example": "res.status(400).json({ error: 'Invalid request format' }); console.error('Function error:', err);"
+    },
+    {
+      "id": "ERROR-HANDLING-002",
+      "severity": "LOW",
+      "category": "Error Handling",
+      "file": "index.ts",
+      "file": "index.ts",
+      "endpoints": ["All endpoints"],
+      "issue": "No structured error types or error codes. Callers cannot distinguish between validation errors, internal errors, or auth failures based on response format alone.",
+      "remediation": "Standardize error response format with error codes and messages.",
+      "example": "{ error: { code: 'VALIDATION_ERROR', message: '...' } }"
+    },
+    {
+      "id": "RATE_LIMIT-001",
+      "severity": "MEDIUM",
+      "category": "Rate Limiting",
+      "file": "index.ts",
+      "endpoints": ["All endpoints"],
+      "issue": "No rate limiting on any endpoint. Functions can be called arbitrarily many times, enabling abuse, spam, or denial-of-service.",
+      "remediation": "Add rate limiting via Firebase Functions configuration or Express rate-middleware. Per-user or per-IP limits.",
+      "example": "Use firebase-functions/ratelimit or express-rate-limit middleware."
+    },
+    {
+      "id": "SECRETS-001",
+      "severity": "INFO",
+      "category": "Secrets Management",
+      "file": "index.ts",
+      "issue": "No hardcoded secrets found in this file, but Gemini API keys and other secrets should be injected via Firebase Functions env vars, not committed to source.",
+      "remediation": "Use `functions.config()` or Firebase env vars for all external service credentials.",
+      "example": "import { env } from 'firebase-functions'; const geminiKey = env.GEMINI_API_KEY;"
+    }
+  ],
+  "summary": {
+    "total_findings": 13,
+    "critical": 2,
+    "high": 5,
+    "medium": 4,
+    "low": 2,
+    "info": 1
+  },
+  "recommendations": [
+    "Implement Firebase Auth middleware on all https.onRequest endpoints",
+    "Validate business ownership for all businessId-dependent operations",
+    "Include authenticated user uid in all Firestore writes",
+    "Replace Date.now() IDs with UUIDs or Firestore auto-IDs",
+    "Standardize error responses; don't leak raw error messages",
+    "Add rate limiting to all endpoints",
+    "Move API keys to Firebase env vars",
+    "Add structured error types with error codes"
+  ]
+}

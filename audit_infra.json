@@ -1,0 +1,42 @@
+{
+  "summary": "Audited infrastructure and security configurations. Found critical authorization bypasses in Firestore rules and completely unauthenticated Cloud Functions.",
+  "findings": [
+    {
+      "file": "firestore.rules",
+      "issue": "Insecure rules for transactions, hki_valuations, and studio_assets. Only checks if businessId is not null. Any authenticated user can read/write data for ANY business, not just their own.",
+      "severity": "critical"
+    },
+    {
+      "file": "functions/src/index.ts",
+      "issue": "All Cloud Functions use https.onRequest but lack authentication middleware (e.g., verifying Firebase Auth ID tokens). They are completely public and can be invoked by anyone without authentication.",
+      "severity": "critical"
+    },
+    {
+      "file": "functions/src/index.ts",
+      "issue": "In saveTransactionAfterReview, (req as any).auth?.uid is used but will be undefined in onRequest without token verification middleware. Transactions are saved with a null UID via admin SDK.",
+      "severity": "critical"
+    },
+    {
+      "file": "functions/src/index.ts",
+      "issue": "In aiIncrementUsage, anyone can hit the public endpoint and increment AI usage counters for any businessId.",
+      "severity": "high"
+    },
+    {
+      "file": "functions/src/index.ts",
+      "issue": "Missing CORS handling in HTTP endpoints. The frontend PWA will fail to call these endpoints from a browser origin.",
+      "severity": "high"
+    },
+    {
+      "file": "functions/lib/index.js",
+      "issue": "ai_usage collection writes from Cloud Functions have no Firestore-level authorization checks beyond what the service account provides. Combined with unauthenticated onRequest endpoints, any caller can write to ai_usage.",
+      "severity": "high"
+    }
+  ],
+  "recommendations": [
+    "Update firestore.rules to verify user ownership of businessId, e.g., by fetching the business document: get(/databases/$(database)/documents/businesses/$(resource.data.businessId)).data.ownerId == request.auth.uid.",
+    "Change Cloud Functions from https.onRequest to https.onCall to automatically handle CORS and Firebase Auth token verification.",
+    "Alternatively, if keeping https.onRequest, add CORS middleware and Firebase Admin verifyIdToken middleware to all onRequest functions.",
+    "Add Firestore document-level security rules for ai_usage collection that verify ownership via the business document ownerId.",
+    "Consider using Firestore security rules with request.auth to tie all writes to authenticated user identity."
+  ]
+}

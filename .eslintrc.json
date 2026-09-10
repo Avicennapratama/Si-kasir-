@@ -1,0 +1,14 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true
+  },
+  "extends": "next/core-web-vitals",
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint", "react"],
+  "rules": {
+    "react/prop-types": "off",
+    "@typescript-eslint/explicit-function-return-type": "warn",
+    "@typescript-eslint/no-unused-vars": ["warn", {"argsIgnorePattern": "^_"}]
+  }
+}

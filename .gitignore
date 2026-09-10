@@ -1,0 +1,26 @@
+node_modules
+*.local
+.next
+dist
+out
+functions/lib
+
+# Env files — jangan pernah commit nilai asli.
+# `*.env*` sebelumnya ikut mengecualikan .env.example,
+# jadi template tidak pernah ter-commit dan onboarding rusak.
+.env
+.env.*
+functions/.env
+functions/.env.*
+
+# ...tapi template WAJIB ikut ter-commit.
+!.env.example
+!functions/.env.example
+
+# Build artifacts
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*

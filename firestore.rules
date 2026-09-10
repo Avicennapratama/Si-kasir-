@@ -1,0 +1,66 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Hanya user yang login yang bisa mengakses
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Helper: ambil UID user dari auth
+    function getUserUid() {
+      return request.auth.uid;
+    }
+
+    // Verifikasi apakah user adalah owner business tersebut
+    function isBusinessOwner(businessId) {
+      allow read: if isSignedIn() && get(/databases/$(database)/documents/businesses/$(businessId)).data.ownerId == getUserUid();
+      allow write: if isSignedIn() && get(/databases/$(database)/documents/businesses/$(businessId)).data.ownerId == getUserUid();
+    }
+
+    // Business records - hanya owner yang boleh CRUD
+    match /businesses/{businessId} {
+      require isBusinessOwner(businessId);
+    }
+
+    // Transactions - hanya user owner business yang boleh
+    match /transactions/{transactionId} {
+      // Read: user bisa baca jika punya business ini
+      allow read: if isSignedIn() && 
+        get(/databases/$(database)/documents/transactions/$(transactionId)).data.businessId != null &&
+        get(/databases/$(database)/documents/businesses/$(resource.data.businessId)).data.ownerId == getUserUid();
+      
+      // Create: butuh businessId dan harus user owner
+      allow create: if isSignedIn() && request.resource.data.businessId != null &&
+        get(/databases/$(database)/documents/businesses/$(request.resource.data.businessId)).data.ownerId == getUserUid();
+      
+      // Update/Delete: hanya owner
+      allow update, delete: if isBusinessOwner(request.resource.data.businessId);
+    }
+
+    // AI Usage - isolasi per business
+    match /ai_usage/{docId} {
+      allow read, write: if isSignedIn() && 
+        get(/databases/$(database)/documents/ai_usage/$(docId)).data.businessId != null &&
+        get(/databases/$(database)/documents/businesses/$(resource.data.businessId)).data.ownerId == getUserUid();
+    }
+
+    // HKI Valuations - isolasi per business
+    match /hki_valuations/{valuationId} {
+      allow read, write: if isSignedIn() && request.resource.data.businessId != null &&
+        get(/databases/$(database)/documents/businesses/$(resource.data.businessId)).data.ownerId == getUserUid();
+    }
+
+    // Studio Assets - isolasi per business
+    match /studio_assets/{assetId} {
+      allow read, write: if isSignedIn() && request.resource.data.businessId != null &&
+        get(/databases/$(database)/documents/businesses/$(resource.data.businessId)).data.ownerId == getUserUid();
+    }
+
+    // Catch-all: tolak semua akses tidak terizinkan
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

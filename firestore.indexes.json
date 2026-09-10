@@ -1,0 +1,16 @@
+{
+  "collections": {
+    "users": {
+      "parent": "users",
+      "composite": "userId"
+    },
+    "transactions": {
+      "parent": "users",
+      "composite": "userId"
+    },
+    "categories": {
+      "parent": "users",
+      "composite": "userId"
+    }
+  }
+}

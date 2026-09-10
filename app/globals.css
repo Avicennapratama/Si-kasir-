@@ -1,0 +1,104 @@
+@import url('https://fonts.googleapis.com/css2?family=Fragment+Mono&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* --- Global Reset & Theme --- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#__next,
+.app {
+  min-height: 100%;
+  width: 100%;
+  background-color: #090A0F;
+  color: #FFFFFF;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Monospace fonts for numbers, money, and codes */
+code,
+pre,
+.font-mono,
+font.monospace {
+  font-family: 'JetBrains Mono', 'Fragment Mono', monospace;
+}
+
+/* Safe area insets utility variables */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+}
+
+.safe-top {
+  padding-top: max(16px, env(safe-area-inset-top, 0px));
+}
+
+.safe-bottom {
+  padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+}
+
+/* Glassmorphism primitives */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.glass-panel-hover:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* --- Skeleton Loading Shimmer --- */
+@keyframes shimmer {
+  0% { background-position: -468px 50%; }
+  100% { background-position: 468px 50%; }
+}
+
+.skeleton-animate {
+  animation: shimmer 1.5s cubic-bezier(0.44, 0.06, 0.24, 0.94) infinite;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.04), transparent);
+  background-size: 468px 100%;
+}
+
+/* --- Offline Banner Sticky --- */
+.offline-banner {
+  position: fixed;
+  top: env(safe-area-inset-top, 0px);
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background: linear-gradient(180deg, #F43F5E 0%, #DA4E24 100%);
+  color: #FFFFFF;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* --- Bottom Nav Fixed Safe Area --- */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  left: 0;
+  right: 0;
+  z-index: 99;
+  background: rgba(9, 10, 15, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
