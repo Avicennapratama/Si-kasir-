@@ -1,66 +1,96 @@
 rules_version = '2';
 
 service cloud.firestore {
-  match /databases/{database}/documents {
 
-    // Hanya user yang login yang bisa mengakses
-    function isSignedIn() {
-      return request.auth != null;
+  // ============================================================
+  // CATATAN ARSITEKTUR
+  // ------------------------------------------------------------
+  // Backend (Firebase Functions / Admin SDK) TIDAK terikat rules ini —
+  // Admin SDK selalu bypass. Rules ini hanya mengatur akses LANGSUNG
+  // dari browser (frontend) ke Firestore.
+  //
+  // Frontend hanya menyentuh:
+  //   - users/{uid}            (auth-context.tsx: getDoc/setDoc profil)
+  //   - businesses/biz_{uid}   (auth-context.tsx: profil usaha)
+  // Selebihnya lewat API backend. Tapi subcollection tetap didefinisikan
+  // untuk kedepannya, dengan nama yang SAMA dengan backend (camelCase):
+  //   transactions, drafts, assistantChats, config, gamification,
+  //   hkiValuations, mediaAssets, studioAssets, usage
+  // ============================================================
+
+  // --- User profile ---
+  match /users/{userId} {
+    // Hanya user itu sendiri yang boleh baca/tulis profilnya.
+    // Dipakai auth-context.tsx saat login Google pertama (setDoc profil).
+    allow read, create, update: if request.auth != null
+      && request.auth.uid == userId;
+
+    // delete ditutup: penghapusan akun lewat backend.
+    allow delete: if false;
+  }
+
+  // --- Business + seluruh subcollection-nya ---
+  match /businesses/{businessId} {
+    // Owner dicek dari field `ownerId` di dokumen business itu sendiri
+    // (diisi auth-context.tsx: ownerId: user.uid). Tidak perlu get() tambahan.
+    function isOwner() {
+      return request.auth != null
+        && resource.data.ownerId == request.auth.uid;
     }
 
-    // Helper: ambil UID user dari auth
-    function getUserUid() {
-      return request.auth.uid;
-    }
+    allow read, update, delete: if isOwner();
 
-    // Verifikasi apakah user adalah owner business tersebut
-    function isBusinessOwner(businessId) {
-      allow read: if isSignedIn() && get(/databases/$(database)/documents/businesses/$(businessId)).data.ownerId == getUserUid();
-      allow write: if isSignedIn() && get(/databases/$(database)/documents/businesses/$(businessId)).data.ownerId == getUserUid();
-    }
+    // Saat create, ownerId WAJIB sama dengan uid yang login.
+    allow create: if request.auth != null
+      && request.resource.data.ownerId == request.auth.uid;
 
-    // Business records - hanya owner yang boleh CRUD
-    match /businesses/{businessId} {
-      require isBusinessOwner(businessId);
-    }
+    // ----- Subcollections (nama = persis seperti di functions/src) -----
 
-    // Transactions - hanya user owner business yang boleh
     match /transactions/{transactionId} {
-      // Read: user bisa baca jika punya business ini
-      allow read: if isSignedIn() && 
-        get(/databases/$(database)/documents/transactions/$(transactionId)).data.businessId != null &&
-        get(/databases/$(database)/documents/businesses/$(resource.data.businessId)).data.ownerId == getUserUid();
-      
-      // Create: butuh businessId dan harus user owner
-      allow create: if isSignedIn() && request.resource.data.businessId != null &&
-        get(/databases/$(database)/documents/businesses/$(request.resource.data.businessId)).data.ownerId == getUserUid();
-      
-      // Update/Delete: hanya owner
-      allow update, delete: if isBusinessOwner(request.resource.data.businessId);
+      allow read, update, delete: if isOwner();
+      allow create: if isOwner()
+        && request.resource.data.businessId == businessId;
     }
 
-    // AI Usage - isolasi per business
-    match /ai_usage/{docId} {
-      allow read, write: if isSignedIn() && 
-        get(/databases/$(database)/documents/ai_usage/$(docId)).data.businessId != null &&
-        get(/databases/$(database)/documents/businesses/$(resource.data.businessId)).data.ownerId == getUserUid();
+    match /drafts/{draftId} {
+      allow read, create, update, delete: if isOwner();
     }
 
-    // HKI Valuations - isolasi per business
-    match /hki_valuations/{valuationId} {
-      allow read, write: if isSignedIn() && request.resource.data.businessId != null &&
-        get(/databases/$(database)/documents/businesses/$(resource.data.businessId)).data.ownerId == getUserUid();
+    match /assistantChats/{chatId} {
+      allow read, create, update, delete: if isOwner();
     }
 
-    // Studio Assets - isolasi per business
-    match /studio_assets/{assetId} {
-      allow read, write: if isSignedIn() && request.resource.data.businessId != null &&
-        get(/databases/$(database)/documents/businesses/$(resource.data.businessId)).data.ownerId == getUserUid();
+    match /gamification/{docId} {
+      allow read, create, update: if isOwner();
+      allow delete: if false; // riwayat gamifikasi tidak boleh dihapus klien
     }
 
-    // Catch-all: tolak semua akses tidak terizinkan
-    match /{document=**} {
-      allow read, write: if false;
+    match /hkiValuations/{valuationId} {
+      allow read, create: if isOwner();
+      allow update, delete: if false; // valuasi bersifat append-only
     }
+
+    match /mediaAssets/{assetId} {
+      allow read, create, update, delete: if isOwner();
+    }
+
+    match /studioAssets/{assetId} {
+      allow read, create, update, delete: if isOwner();
+    }
+
+    match /usage/{docId} {
+      allow read, create, update: if isOwner();
+      allow delete: if false; // kuota pemakaian tidak boleh direset klien
+    }
+
+    match /config/{configKey} {
+      allow read, create, update: if isOwner();
+      allow delete: if false;
+    }
+  }
+
+  // --- Semua yang lain: tolak ---
+  match /{document=**} {
+    allow read, write: if false;
   }
 }
