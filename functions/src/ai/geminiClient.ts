@@ -14,13 +14,15 @@ import { receiptPrompt } from './prompts/receipt.prompt.js';
 // prompt lain. Pakai nama yang benar-benar diekspor.
 import { VOICE_EXTRACTION_PROMPT } from './prompts/voice.prompt.js';
 
-export const SUPPORTED_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic'];
-export const GEMINI_BATCH_SIZE = 5;
-export const GEMINI_MAX_TOKENS = 1000;
-export const GEMINI_TEMPERATURE = 0.1;
+import {
+  GEMINI_MAX_TOKENS,
+  GEMINI_TEMPERATURE,
+  SUPPORTED_IMAGE_MIME_TYPES
+} from '../config/gemini.js';
 
-const MODEL = 'gemini-1.5-flash';
-const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
+export { SUPPORTED_IMAGE_MIME_TYPES };
+
+const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
 export interface GeminiReceiptResult {
   type: 'income' | 'expense' | null;
