@@ -1,0 +1,38 @@
+# ============================================================
+# Firebase App Hosting — konfigurasi backend frontend (Next.js)
+# ------------------------------------------------------------
+# File ini hanya mengatur FRONTEND. Backend Express di functions/
+# tetap di-deploy terpisah sebagai Firebase Functions.
+# Dok: https://firebase.google.com/docs/app-hosting/configure
+# ============================================================
+
+runConfig:
+  # Naikkan memori default jika perlu; 512MiB cukup untuk app ini.
+  memoryMiB: 512
+  concurrency: 80
+  minInstances: 0      # 0 = scale ke nol saat idle (hemat biaya)
+  maxInstances: 10
+
+env:
+  # --- URL backend Firebase Functions (PRODUKSI) -----------------
+  # Ganti setelah deploy Functions: formatnya
+  #   https://us-central1-<PROJECT_ID>.cloudfunctions.net/api
+  # Frontend membaca ini via lib/types/api.ts
+  - variable: NEXT_PUBLIC_API_BASE_URL
+    availability: [BUILD, RUNTIME]
+
+  # --- Konfigurasi Firebase web (di-inject otomatis bila appId diset) --
+  # App Hosting mengisi FIREBASE_WEBAPP_CONFIG otomatis saat build bila
+  # backend ini ditautkan ke Firebase Web App. Kalau tidak, isi manual:
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    availability: [BUILD, RUNTIME]
+  # NEXT_PUBLIC_FIREBASE_API_KEY: lebih aman diisi lewat Console
+  # (Secret Manager) daripada ditulis di file yang ke-commit.
