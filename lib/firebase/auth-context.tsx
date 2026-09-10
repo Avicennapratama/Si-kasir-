@@ -15,7 +15,7 @@ interface AuthContextType {
   user: User | null;
   business: BusinessProfile | null;
   loading: boolean;
-  signInWithGoogle: () => Promise<void>;
+  signInWithGoogle: () => Promise<{ isNewUser: boolean }>;
   logout: () => Promise<void>;
   refreshBusiness: () => Promise<void>;
   updateBusinessProfile: (data: { name: string; category: string }) => Promise<void>;
@@ -25,7 +25,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   business: null,
   loading: true,
-  signInWithGoogle: async () => {},
+  signInWithGoogle: async () => ({ isNewUser: false }),
   logout: async () => {},
   refreshBusiness: async () => {},
   updateBusinessProfile: async () => {},
@@ -74,12 +74,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => unsubscribe();
   }, []);
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (): Promise<{ isNewUser: boolean }> => {
     try {
       const res = await signInWithPopup(auth, googleProvider);
+      
+      // Set cookie immediately before router.push to avoid middleware race condition
+      const token = await res.user.getIdToken();
+      document.cookie = `auth-token=${token}; path=/; max-age=86400; SameSite=Lax`;
+
       const userRef = doc(db, "users", res.user.uid);
       const snap = await getDoc(userRef);
+      
+      let isNewUser = false;
       if (!snap.exists()) {
+        isNewUser = true;
         await setDoc(userRef, {
           uid: res.user.uid,
           email: res.user.email,
@@ -87,7 +95,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           photoURL: res.user.photoURL,
           createdAt: new Date(),
         });
+      } else {
+        // Jika ada user document tapi belum punya businessId, anggap user baru yang belum onboarding
+        if (!snap.data().businessId) {
+          isNewUser = true;
+        }
       }
+      
+      return { isNewUser };
     } catch (error) {
       console.error("Google Auth error:", error);
       throw error;
