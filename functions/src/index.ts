@@ -56,14 +56,4 @@ app.use(errorHandler);
 
 export const api = functions.https.onRequest(app);
 
-// Endpoint callable lama — dipertahankan untuk kompatibilitas.
-export {
-  aiExtractReceipt,
-  aiExtractVoice,
-  aiStudioEnhanceImage,
-  aiStudioGenerateCaption,
-  aiHkiPreValuation,
-  aiAssistantChat,
-  aiIncrementUsage,
-  saveTransactionAfterReview
-} from './controllers.js';
+// Endpoint callable lama — dihapus untuk keamanan.
