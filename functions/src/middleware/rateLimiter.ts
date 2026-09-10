@@ -31,24 +31,35 @@ export const rateLimiter = (limit?: number) => {
   // .unref() agar timer tidak menghalangi proses Node untuk exit.
   const sweeper = setInterval(() => {
     const now = Date.now();
-    for (const [key, bucket] of requests) {
-      if (bucket.resetAt <= now) requests.delete(key);
-    }
+    // Hindari `for...of` langsung di Map — beberapa konfigurasi TS (frontend)
+    // menolak iterasi Map tanpa downlevelIteration. `forEach` aman.
+    const stale: string[] = [];
+    requests.forEach((bucket, key) => {
+      if (bucket.resetAt <= now) stale.push(key);
+    });
+    for (const key of stale) requests.delete(key);
   }, 60_000);
   sweeper.unref?.();
 
   const evictIfNeeded = (now: number) => {
     if (requests.size < MAX_ENTRIES) return;
-    for (const [key, bucket] of requests) {
-      if (bucket.resetAt <= now) requests.delete(key);
-    }
+    // Bersihkan yang kedaluwarsa dulu (tanpa for...of di Map).
+    const stale: string[] = [];
+    requests.forEach((bucket, key) => {
+      if (bucket.resetAt <= now) stale.push(key);
+    });
+    for (const key of stale) requests.delete(key);
+
     if (requests.size >= MAX_ENTRIES) {
       // Buang sebagian entri lama supaya Map tidak terus membesar.
-      let removed = 0;
       const target = Math.floor(MAX_ENTRIES / 2);
-      for (const key of requests.keys()) {
+      let removed = 0;
+      const keys: string[] = [];
+      requests.forEach((_, key) => keys.push(key));
+      for (const key of keys) {
+        if (removed >= target) break;
         requests.delete(key);
-        if (++removed >= target) break;
+        removed++;
       }
     }
   };
