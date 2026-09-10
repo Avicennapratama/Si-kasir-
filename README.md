@@ -1,26 +1,24 @@
 # 🛍️ SiKasir AI
 
-SiKasir AI adalah Progressive Web App (PWA) asisten kasir pintar untuk UMKM dan pelaku ekonomi kreatif Indonesia.
+SiKasir AI adalah asisten kasir pintar dan alat manajemen operasi bisnis berbasis Progressive Web App (PWA) untuk UMKM dan pelaku Ekonomi Kreatif (Ekraf) Indonesia.
 
-Aplikasi ini memungkinkan pencatatan keuangan UMKM dengan cara yang paling mudah:
-- 📝 **Input manual** (formulir biasa)
-- 🎙️ **Perintah suara** (langsung bicara seperti "Ada pemasukan 30 ribu dari nasi goreng")
-- 📸 **Foto nota** (AI yang otomatis membaca barang dan harga dari foto bon/nota belanja)
+Aplikasi ini memudahkan pencatatan keuangan UMKM melalui berbagai jalur yang intuitif:
+- 📝 **Input Manual** (Formulir praktis konvensional)
+- 🎙️ **Pencatatan Suara Pintar** (Pencatatan NLP lokal langsung dari perintah suara pengguna)
+- 📸 **Pindai Nota Pintar** (AI otomatis membaca barang, jumlah, dan harga dari foto bon/nota belanja)
 
-**Prinsip Utama:** AI-assisted, manual-first fallback. Semua hasil ekstraksi AI bersifat *draft* dan harus melewati layar ulasan (*review*) sebelum tersimpan ke database.
+Selain pencatatan dasar, SiKasir AI dilengkapi dengan fitur canggih khusus bisnis:
+- 🎨 **Studio Foto AI**: Menambahkan filter otomatis pada produk dan menghasilkan _caption_ untuk media sosial (Instagram, WhatsApp, TikTok).
+- ⚖️ **Pra-Valuasi HKI**: Mengestimasi nilai kekayaan intelektual (merek, resep, desain) secara instan.
+- 💬 **Asisten Chatbot AI**: Teman diskusi regulasi UMKM, PIRT, sertifikasi Halal, hingga tips arus kas.
 
 ---
 
-## 📚 Dokumen Teknis Proyek
+## 🚀 Fitur dan Arsitektur Utama
 
-Untuk membedah arsitektur dan kapabilitas aplikasi ini, silakan telusuri dokumentasi spesifik kami di folder `docs/`:
-
-- [Product Requirements Document (PRD)](./docs/PRD.md)
-- [Technical Specification](./docs/TECH_SPEC.md)
-- [Database Design](./docs/DATABASE.md)
-- [API Specification](./docs/API.md)
-- [AI Prompts](./docs/AI_PROMPTS.md)
-- [Security & Privacy](./docs/SECURITY.md)
+- **Zero Credential Leak & Security First:** Semua pemanggilan _Large Language Model_ (Google Gemini) dilakukan dari _backend_ serverless, mengamankan API key sepenuhnya.
+- **Robust API Key Rotation:** SiKasir AI secara otomatis merotasi penggunaan berbagai kunci API Gemini dalam _backend_ (Mendukung hingga 8+ kunci secara bersamaan) untuk menghindari _rate limiting_ saat lalu lintas aplikasi tinggi.
+- **Prinsip Human-in-the-Loop:** Hasil OCR atau generasi konten dari AI bersifat sebagai _draft_. Pengguna selalu dapat meninjau (*review*) dan memvalidasi sebelum disimpan permanen ke database.
 
 ---
 
@@ -28,15 +26,15 @@ Untuk membedah arsitektur dan kapabilitas aplikasi ini, silakan telusuri dokumen
 
 | Layer | Teknologi |
 |---|---|
-| **Frontend** | Next.js + TypeScript |
-| **UI** | Tailwind CSS + shadcn/ui |
+| **Frontend** | Next.js (App Router) + TypeScript |
+| **UI** | Tailwind CSS + shadcn/ui + Lucide Icons |
 | **State & Data** | Zustand |
-| **Auth** | Firebase Auth (Google SSO) |
+| **Auth** | Firebase Authentication |
 | **Database** | Firebase Firestore |
 | **Storage** | Firebase Cloud Storage |
 | **Backend** | Firebase Cloud Functions (Node.js + Express) |
-| **AI** | Google Gemini (Gemini 1.5 Flash Vision & Text) |
-| **Deployment** | Firebase Hosting & Functions |
+| **AI** | Google Gemini (1.5 Flash Vision & Text) |
+| **Deployment** | Firebase Hosting & Functions / Vercel |
 
 ---
 
@@ -46,7 +44,7 @@ Untuk membedah arsitektur dan kapabilitas aplikasi ini, silakan telusuri dokumen
 - **Node.js** v18+ 
 - **npm** atau **yarn**
 
-### 2. Kloning & Instalasi Frontend
+### 2. Konfigurasi Frontend
 ```bash
 git clone https://github.com/Avicennapratama/Si-kasir-.git
 cd Si-kasir-
@@ -54,10 +52,10 @@ cd Si-kasir-
 # Install dependensi frontend
 npm install
 
-# Salin konfigurasi environment
+# Konfigurasi environment frontend
 cp .env.example .env.local
 ```
-*(Isi `.env.local` dengan kredensial Firebase web client public Anda. Variabel ini aman untuk di-push, namun usahakan untuk membatasinya dari Firebase Console).*
+*(Isi `.env.local` dengan Firebase SDK web client Anda. Variabel ini (berawalan `NEXT_PUBLIC_`) aman diekspos).*
 
 ### 3. Konfigurasi Backend (Firebase Functions)
 ```bash
@@ -66,10 +64,14 @@ cd functions
 # Install dependensi backend
 npm install
 
-# Setup environment backend
+# Konfigurasi environment backend
 cp .env.example .env
 ```
-Isi file `.env` di dalam folder `functions` dengan kredensial rahasia (seperti `GEMINI_API_KEY`). **Penting: Jangan pernah mengekspos API Key Rahasia Anda ke frontend atau commit Git!**
+Isi file `functions/.env` dengan kredensial rahasia:
+```env
+GEMINI_API_KEY="KEY_1, KEY_2, KEY_3, KEY_4, KEY_5"
+```
+Anda dapat memasukkan beberapa API keys yang dipisahkan oleh koma untuk *load-balancing* dan menghindari limit. **Penting: Jangan pernah mengekspos API Key Rahasia Anda ke frontend (jangan pakai awalan NEXT_PUBLIC)!**
 
 ### 4. Menjalankan Development Server
 Di root direktori, jalankan:
@@ -80,31 +82,4 @@ Aplikasi akan berjalan di `http://localhost:3000`.
 
 ---
 
-## 🛡️ Prinsip Keamanan & Produk
-
-1. **Manual Selalu Tersedia:** AI tidak boleh menjadi satu-satunya jalur pencatatan. Jika API AI gagal, user fallback ke manual.
-2. **Review Sebelum Simpan:** Hasil OCR dari AI harus bisa diedit oleh manusia sebelum resmi dikonfirmasi.
-3. **Privasi:** Data keuangan user diisolasi berdasarkan _User ID_ (Rule Firestore ketat).
-4. **Backend-heavy AI:** Seluruh proses AI (prompting, panggilan model) berjalan di backend, menyembunyikan API key Google Gemini.
-
----
-
-## 🚀 Deployment
-
-Deployment disarankan melalui Firebase CLI secara terpusat:
-
-```bash
-# Login Firebase
-firebase login
-
-# Setel alias project
-firebase use <YOUR-PROJECT-ID>
-
-# Build backend
-cd functions && npm run build && cd ..
-
-# Deploy seluruh fungsi dan hosting
-firebase deploy
-```
-
-> Aplikasi ini dibuat untuk membantu pahlawan ekonomi kreatif lokal berkembang lebih pesat melalui keajaiban teknologi AI. Bangga Buatan Indonesia! 🇮🇩
+> Dibuat untuk membantu pahlawan ekonomi kreatif lokal berkembang lebih pesat melalui inovasi teknologi AI. Bangga Buatan Indonesia! 🇮🇩

@@ -120,73 +120,84 @@ export default function DashboardPage() {
       />
 
       {/* Top Bar Header */}
-      <header className="flex items-center justify-between relative z-10 mb-5">
+      <header className="flex items-center justify-between relative z-10 mb-3 mt-2">
         <button 
           type="button"
           onClick={() => router.push("/pengaturan/usaha")}
           className="flex items-center gap-3 text-left hover:opacity-80 active:scale-95 transition-all"
         >
-          <div className="w-10 h-10 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-orange-400 shrink-0">
-            <Store className="w-5 h-5" />
-          </div>
           <div>
-            <h2 className="text-sm font-bold text-white tracking-wide truncate max-w-[140px]">
+            <h2 className="text-lg font-bold text-white tracking-wide truncate max-w-[200px]">
               {business?.name || "Usaha Saya"}
             </h2>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
-              <span className="text-[11px] text-slate-400 font-medium capitalize truncate">
-                {business?.category || "Kasir Aktif"}
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+              <span className="text-xs text-slate-400 font-medium capitalize">
+                {navigator.onLine ? "Online" : "Offline"}
               </span>
             </div>
           </div>
         </button>
 
-        {/* Streak Badge */}
+        {/* Avatar Profil */}
         <button 
           type="button"
-          onClick={() => router.push("/gamifikasi")}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-orange-500/20 bg-orange-500/10 shadow-[0_0_15px_rgba(255,137,24,0.15)] hover:bg-orange-500/20 active:scale-95 transition-all"
+          onClick={() => router.push("/pengaturan")}
+          className="w-10 h-10 rounded-full bg-white/[0.05] border border-white/[0.1] flex items-center justify-center overflow-hidden shrink-0 hover:border-white/30 active:scale-95 transition-all"
         >
-          <Flame className="w-4 h-4 text-orange-400 fill-orange-400" />
-          <span className="text-xs font-bold font-mono text-orange-300">
-            3 Hari
-          </span>
+          {user?.photoURL ? (
+            <img src={user.photoURL} alt="Profil" className="w-full h-full object-cover" />
+          ) : (
+            <div className="text-sm font-bold text-slate-300">
+              {user?.displayName ? user.displayName.charAt(0).toUpperCase() : "U"}
+            </div>
+          )}
         </button>
       </header>
 
+      {/* Banner Streak Gamifikasi */}
+      <div 
+        onClick={() => router.push("/gamifikasi")}
+        className="relative z-10 w-full p-3 rounded-xl border border-orange-500/20 bg-orange-500/10 mb-5 flex items-center gap-3 cursor-pointer hover:bg-orange-500/20 active:scale-[0.98] transition-all"
+      >
+        <Flame className="w-5 h-5 text-orange-400 fill-orange-400 shrink-0" />
+        <p className="text-[11px] font-medium text-orange-100 leading-snug">
+          <strong className="font-bold text-orange-300">3 Hari Berturut-turut!</strong> Catat transaksi hari ini agar streak tidak putus.
+        </p>
+      </div>
+
       {/* Hero Bento Card - Saldo Kas Hari Ini */}
-      <section className="relative z-10 p-5 rounded-3xl border border-white/[0.08] bg-white/[0.02] backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.5)] mb-6">
-        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-          Saldo Kas Bersih Hari Ini
+      <section className="relative z-10 p-5 rounded-2xl border border-white/[0.08] bg-white/[0.02] backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.5)] mb-6">
+        <span className="text-[12px] font-medium text-slate-400">
+          Sisa Saldo Hari Ini
         </span>
 
         {/* Nominal Bersih Mono */}
-        <div className="text-3xl font-bold font-mono tracking-tight text-white mt-1.5 mb-5 flex items-baseline gap-1">
-          <span className="text-lg text-slate-500 font-sans font-normal">Rp</span>
+        <div className="text-[32px] font-bold font-mono tracking-tight text-white mt-1 mb-4 flex items-baseline gap-1">
+          <span className="text-xl text-slate-500 font-sans font-normal">Rp</span>
           <span>{netBalance.toLocaleString("id-ID")}</span>
         </div>
 
         {/* Split Masuk & Keluar Bar */}
-        <div className="grid grid-cols-2 gap-2.5 pt-3 border-t border-white/[0.06]">
+        <div className="grid grid-cols-2 gap-3 pt-4 border-t border-white/[0.06]">
           {/* Uang Masuk */}
-          <div className="p-3 rounded-2xl bg-emerald-500/[0.06] border border-emerald-500/20 flex flex-col">
-            <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-medium mb-1">
+          <div className="flex flex-col">
+            <div className="flex items-center gap-1.5 text-emerald-400 text-[12px] font-medium mb-1">
               <ArrowDownLeft className="w-3.5 h-3.5" />
-              <span>Masuk</span>
+              <span>Uang Masuk</span>
             </div>
-            <span className="text-sm font-bold font-mono text-emerald-300">
+            <span className="text-[16px] font-semibold font-mono text-emerald-400">
               +Rp {todayIncome.toLocaleString("id-ID")}
             </span>
           </div>
 
           {/* Uang Keluar */}
-          <div className="p-3 rounded-2xl bg-rose-500/[0.06] border border-rose-500/20 flex flex-col">
-            <div className="flex items-center gap-1.5 text-rose-400 text-xs font-medium mb-1">
+          <div className="flex flex-col border-l border-white/[0.06] pl-3">
+            <div className="flex items-center gap-1.5 text-rose-400 text-[12px] font-medium mb-1">
               <ArrowUpRight className="w-3.5 h-3.5" />
-              <span>Keluar</span>
+              <span>Uang Keluar</span>
             </div>
-            <span className="text-sm font-bold font-mono text-rose-300">
+            <span className="text-[16px] font-semibold font-mono text-rose-400">
               -Rp {todayExpense.toLocaleString("id-ID")}
             </span>
           </div>
@@ -195,99 +206,89 @@ export default function DashboardPage() {
 
       {/* Quick Action Bar (3 Tombol Utama Sesuai Spesifikasi) */}
       <section className="relative z-10 mb-6">
-        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
-          Catat Transaksi Kasir
-        </div>
-
-        <div className="grid grid-cols-3 gap-2.5">
+        <div className="grid grid-cols-3 gap-3">
           {/* Catat Manual */}
           <button
             onClick={() => router.push("/catat/manual")}
-            className="p-3.5 rounded-2xl border border-white/[0.08] bg-white/[0.03] flex flex-col items-center justify-center gap-2 hover:border-white/20 active:scale-95 transition-all text-center group"
+            className="h-[72px] rounded-xl border border-white/[0.08] bg-white/[0.03] flex flex-col items-center justify-center gap-1.5 hover:border-white/20 active:scale-95 transition-all text-center group"
           >
-            <div className="w-10 h-10 rounded-xl bg-white/[0.05] flex items-center justify-center text-slate-200 group-hover:text-white transition-colors">
-              <Keyboard className="w-5 h-5" />
-            </div>
-            <span className="text-xs font-medium text-slate-300">Manual</span>
+            <Keyboard className="w-5 h-5 text-slate-300 group-hover:text-white transition-colors" />
+            <span className="text-[11px] font-medium text-slate-300">Manual</span>
           </button>
 
           {/* Catat Suara (Solar Glow Aksen) */}
           <button
             onClick={() => router.push("/catat/suara")}
-            className="p-3.5 rounded-2xl border border-orange-500/30 bg-orange-500/[0.08] flex flex-col items-center justify-center gap-2 hover:border-orange-500/50 shadow-[0_0_20px_rgba(255,137,24,0.15)] active:scale-95 transition-all text-center group"
+            className="h-[72px] rounded-xl border border-orange-500/30 bg-orange-500/[0.08] flex flex-col items-center justify-center gap-1.5 hover:bg-orange-500/10 shadow-[0_0_15px_rgba(255,137,24,0.1)] active:scale-95 transition-all text-center group relative overflow-hidden"
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#FF8918] to-[#DA4E24] flex items-center justify-center text-white shadow-[0_0_12px_rgba(255,137,24,0.4)]">
-              <Mic className="w-5 h-5" />
-            </div>
-            <span className="text-xs font-semibold text-orange-300">Suara AI</span>
+            <div className="absolute inset-0 bg-gradient-to-tr from-orange-500/20 to-transparent opacity-50" />
+            <Mic className="w-5 h-5 text-orange-400 relative z-10" />
+            <span className="text-[11px] font-semibold text-orange-300 relative z-10">Suara AI</span>
           </button>
 
           {/* Pindai Nota */}
           <button
             onClick={() => router.push("/catat/nota")}
-            className="p-3.5 rounded-2xl border border-white/[0.08] bg-white/[0.03] flex flex-col items-center justify-center gap-2 hover:border-white/20 active:scale-95 transition-all text-center group"
+            className="h-[72px] rounded-xl border border-white/[0.08] bg-white/[0.03] flex flex-col items-center justify-center gap-1.5 hover:border-white/20 active:scale-95 transition-all text-center group"
           >
-            <div className="w-10 h-10 rounded-xl bg-white/[0.05] flex items-center justify-center text-slate-200 group-hover:text-white transition-colors">
-              <Camera className="w-5 h-5" />
-            </div>
-            <span className="text-xs font-medium text-slate-300">Foto Nota</span>
+            <Camera className="w-5 h-5 text-slate-300 group-hover:text-white transition-colors" />
+            <span className="text-[11px] font-medium text-slate-300">Pindai Nota</span>
           </button>
         </div>
       </section>
 
       {/* Riwayat Transaksi Hari Ini List */}
       <section className="relative z-10">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-            Aktivitas Hari Ini
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-[16px] font-semibold text-white">
+            Transaksi Hari Ini
           </span>
           <button 
             onClick={() => router.push("/riwayat")}
-            className="text-xs text-orange-400 hover:text-orange-300 flex items-center gap-0.5"
+            className="text-[14px] font-medium text-emerald-400 hover:text-emerald-300"
           >
-            <span>Lihat Semua</span>
-            <ChevronRight className="w-3.5 h-3.5" />
+            Lihat Semua
           </button>
         </div>
 
         {recentTransactions.length === 0 ? (
           /* Empty State Ramah */
-          <div className="p-6 rounded-3xl border border-white/[0.06] bg-white/[0.01] text-center flex flex-col items-center">
-            <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center text-slate-500 mb-3">
-              <TrendingUp className="w-6 h-6" />
+          <div className="py-8 text-center flex flex-col items-center">
+            <div className="w-12 h-12 flex items-center justify-center text-slate-600 mb-2">
+              <TrendingUp className="w-10 h-10 opacity-50" />
             </div>
-            <h4 className="text-sm font-semibold text-slate-300 mb-1">Belum Ada Transaksi</h4>
-            <p className="text-xs text-slate-500 max-w-[220px] leading-relaxed">
-              Mulai catat transaksi pertama hari ini lewat tombol manual, suara, atau foto nota.
+            <h4 className="text-[14px] font-medium text-slate-300 mb-1">Belum ada transaksi hari ini</h4>
+            <p className="text-[12px] text-slate-500 max-w-[240px] leading-relaxed">
+              Ketuk salah satu tombol di atas untuk mulai mencatat!
             </p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-0 border-t border-white/[0.06]">
             {recentTransactions.map((tx) => (
               <div
                 key={tx.id}
-                className="p-3.5 rounded-2xl border border-white/[0.06] bg-white/[0.02] flex items-center justify-between"
+                className="h-[60px] flex items-center justify-between border-b border-white/[0.06] hover:bg-white/[0.02] transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-3">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold ${
+                  <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
                     tx.type === "income" 
-                      ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" 
-                      : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+                      ? "bg-emerald-500/10 text-emerald-400" 
+                      : "bg-rose-500/10 text-rose-400"
                   }`}>
                     {tx.type === "income" ? "+" : "-"}
                   </div>
                   <div>
-                    <h5 className="text-sm font-semibold text-white">
+                    <h5 className="text-[14px] font-medium text-slate-200 truncate max-w-[140px]">
                       {tx.note || tx.category || "Transaksi"}
                     </h5>
-                    <span className="text-[10px] text-slate-400 capitalize">
-                      {tx.category} • {tx.source || "manual"}
+                    <span className="text-[10px] font-mono text-slate-500">
+                      [{tx.source || "manual"}] • {new Date(tx.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
                 </div>
 
                 <div className="text-right">
-                  <span className={`text-sm font-bold font-mono ${
+                  <span className={`text-[14px] font-semibold font-mono ${
                     tx.type === "income" ? "text-emerald-400" : "text-rose-400"
                   }`}>
                     {tx.type === "income" ? "+" : "-"}Rp {tx.amount.toLocaleString("id-ID")}

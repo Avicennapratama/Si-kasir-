@@ -11,7 +11,8 @@ import {
   TrendingUp, 
   PieChart, 
   HelpCircle,
-  AlertTriangle
+  AlertTriangle,
+  ShieldCheck
 } from "lucide-react";
 import { useAuth } from "@/lib/firebase/auth-context";
 
@@ -23,7 +24,7 @@ const QUICK_TOPICS = [
   { id: "separation", title: "Cara Pisahkan Uang Pribadi & Toko", icon: PieChart },
 ];
 
-import { ShieldCheck } from "lucide-react";
+import { sendAssistantMessage } from "@/lib/api/assistant.api";
 
 interface ChatMessage {
   id: string;
@@ -46,7 +47,7 @@ export default function AsistenPage() {
   }, [messages, isTyping]);
 
   const handleSend = async (text: string) => {
-    if (!text.trim()) return;
+    if (!text.trim() || !business?.id) return;
 
     // Add user message
     const userMsg: ChatMessage = {
@@ -55,34 +56,39 @@ export default function AsistenPage() {
       text: text.trim(),
       timestamp: new Date(),
     };
+    
+    // Construct history for API
+    const history = messages.map(msg => ({
+      role: msg.role === "user" ? "user" as const : "assistant" as const,
+      content: msg.text
+    }));
+
     setMessages((prev) => [...prev, userMsg]);
     setInputValue("");
     setIsTyping(true);
 
-    // Mock AI Response with delay
-    setTimeout(() => {
-      let aiResponseText = "";
-      const lower = text.toLowerCase();
-
-      if (lower.includes("nib") || lower.includes("izin")) {
-        aiResponseText = "Untuk membuat NIB gratis, kamu bisa akses website OSS (oss.go.id). Siapkan KTP, NPWP, dan nomor telepon aktif. Jika usahamu skala mikro, pilih opsi UMK dan ikuti panduannya sampai NIB terbit. Mudah kok!";
-      } else if (lower.includes("halal")) {
-        aiResponseText = "Sertifikat Halal untuk UMKM sekarang lebih mudah lewat jalur Sehati (Sertifikasi Halal Gratis). Syarat utamanya: punya NIB, produk tidak mengandung daging yang disembelih (kecuali ada sertifikat halal potong hewan), dan bahan-bahan sudah jelas kehalalannya.";
-      } else if (lower.includes("kas") || lower.includes("uang")) {
-        aiResponseText = "Tips paling penting: JANGAN gabung uang pribadi dan uang toko! Bikin dua dompet atau dua rekening berbeda. Kalau ambil barang toko untuk dimakan sendiri, catat sebagai 'Pengeluaran Lainnya' agar stok dan kas tetap sinkron.";
-      } else {
-        aiResponseText = `Pertanyaan bagus! Sebagai asisten dari ${business?.name || "toko ini"}, saya menyarankan kamu selalu rutin mencatat transaksi setiap hari agar datanya bisa saya pelajari dan saya kasih saran yang lebih akurat.`;
-      }
-
+    try {
+      const response = await sendAssistantMessage(business.id, text.trim(), history);
+      
       const aiMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: "ai",
-        text: aiResponseText,
+        text: response.data?.reply || "Maaf, saya tidak mengerti.",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, aiMsg]);
+    } catch (error) {
+      console.error("Assistant error:", error);
+      const aiMsg: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: "ai",
+        text: "Maaf, asisten sedang tidak bisa merespons. Coba lagi nanti.",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, aiMsg]);
+    } finally {
       setIsTyping(false);
-    }, 2000);
+    }
   };
 
   return (
@@ -101,7 +107,7 @@ export default function AsistenPage() {
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-base font-bold text-white">Asisten Legalitas</h1>
+        <h1 className="text-[18px] font-bold text-white">Asisten Usaha & Regulasi</h1>
         <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
           <Bot className="w-5 h-5" />
         </div>
@@ -117,8 +123,8 @@ export default function AsistenPage() {
               <div className="w-8 h-8 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400 shrink-0 mt-1 border border-cyan-500/20">
                 <Bot className="w-4 h-4" />
               </div>
-              <div className="p-3.5 rounded-2xl rounded-tl-sm bg-white/[0.04] border border-white/[0.08] text-sm text-slate-200 leading-relaxed shadow-lg">
-                Halo! Saya asisten pintar SiKasir AI. Ada yang bisa saya bantu soal izin usaha, sertifikat halal, atau tips atur uang toko?
+              <div className="p-3.5 rounded-2xl rounded-tl-sm bg-white/[0.04] border border-white/[0.08] text-[14px] text-slate-200 leading-relaxed shadow-lg">
+                <span className="font-semibold text-cyan-400">Asisten:</span> Halo! Saya asisten pintar SiKasir AI. Ada yang bisa saya bantu soal izin usaha, sertifikat halal, atau tips atur uang toko?
               </div>
             </div>
 
@@ -129,10 +135,10 @@ export default function AsistenPage() {
                   <button
                     key={topic.id}
                     onClick={() => handleSend(topic.title)}
-                    className="p-2.5 rounded-xl bg-white/[0.02] hover:bg-cyan-500/10 hover:border-cyan-500/30 border border-white/[0.06] text-left transition-all active:scale-95 flex gap-2 items-start group"
+                    className="p-2.5 rounded-xl bg-white/[0.02] hover:bg-cyan-500/10 hover:border-cyan-500/30 border border-white/[0.06] text-left transition-all active:scale-95 flex gap-2 items-center group"
                   >
-                    <Icon className="w-4 h-4 text-slate-400 group-hover:text-cyan-400 shrink-0 mt-0.5" />
-                    <span className="text-xs font-medium text-slate-300 group-hover:text-cyan-300">
+                    <Icon className="w-4 h-4 text-slate-400 group-hover:text-cyan-400 shrink-0" />
+                    <span className="text-[12px] font-semibold text-slate-300 group-hover:text-cyan-300">
                       {topic.title}
                     </span>
                   </button>
@@ -150,17 +156,21 @@ export default function AsistenPage() {
                 <Bot className="w-4 h-4" />
               </div>
             ) : (
-              <div className="w-8 h-8 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-400 shrink-0 mt-1 border border-orange-500/20">
+              <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0 mt-1 border border-emerald-500/20">
                 <Store className="w-4 h-4" />
               </div>
             )}
             
-            <div className={`p-3.5 rounded-2xl text-sm leading-relaxed shadow-lg max-w-[85%] ${
+            <div className={`p-3.5 rounded-2xl text-[14px] leading-relaxed shadow-lg max-w-[85%] ${
               msg.role === "user" 
                 ? "rounded-tr-sm bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/30 text-emerald-50"
                 : "rounded-tl-sm bg-white/[0.04] border border-white/[0.08] text-slate-200"
             }`}>
-              {msg.text}
+              {msg.role === "user" ? (
+                <><span className="font-semibold text-emerald-400">User:</span> {msg.text}</>
+              ) : (
+                <><span className="font-semibold text-cyan-400">Asisten:</span> {msg.text}</>
+              )}
             </div>
           </div>
         ))}
@@ -182,9 +192,8 @@ export default function AsistenPage() {
         {/* Disclaimer Warning - Show only after first AI response */}
         {messages.length > 0 && !isTyping && (
           <div className="flex items-start gap-2 px-3 py-2 rounded-xl bg-orange-500/10 border border-orange-500/20 mx-4 mt-8">
-            <AlertTriangle className="w-3.5 h-3.5 text-orange-400 shrink-0 mt-0.5" />
-            <p className="text-[10px] text-orange-300/80 leading-tight">
-              Asisten memberikan panduan informatif awal, bukan penasihat hukum resmi. Pastikan selalu cross-check ke instansi terkait.
+            <p className="text-[12px] text-orange-300/80 leading-tight">
+              ⚠️ Asisten memberikan saran informatif, bukan penasihat hukum resmi.
             </p>
           </div>
         )}

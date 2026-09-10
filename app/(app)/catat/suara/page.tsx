@@ -231,7 +231,7 @@ export default function CatatSuaraPage() {
       />
 
       {/* Header */}
-      <div className="relative z-10 flex items-center justify-between mb-5">
+      <div className="relative z-10 flex items-center justify-between mb-5 mt-2">
         <button
           type="button"
           onClick={handleBack}
@@ -239,22 +239,22 @@ export default function CatatSuaraPage() {
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-base font-semibold text-white">Catat Suara Pintar</h1>
+        <h1 className="text-[18px] font-bold text-white">Catat Suara Pintar</h1>
         <div className="w-10" />
       </div>
 
       {/* Tips Card */}
-      <div className="relative z-10 p-4 rounded-3xl border border-cyan-500/20 bg-cyan-500/[0.05] backdrop-blur-md mb-6">
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-cyan-300 mb-2">
+      <div className="relative z-10 p-3.5 rounded-[14px] border border-white/[0.08] bg-white/[0.03] backdrop-blur-md mb-6">
+        <div className="flex items-center gap-1.5 text-[12px] font-semibold text-cyan-300 mb-2">
           <Sparkles className="w-3.5 h-3.5" />
-          <span>Contoh cara bicara:</span>
+          <span>💡 Contoh cara bicara:</span>
         </div>
         <div className="space-y-1.5">
           <p className="text-[13px] italic text-slate-300 leading-relaxed">
-            &ldquo;Laku dua porsi mie ayam tiga puluh ribu&rdquo;
+            &ldquo;Laku soto ayam dua porsi tiga puluh ribu&rdquo;
           </p>
           <p className="text-[13px] italic text-slate-300 leading-relaxed">
-            &ldquo;Beli minyak goreng dua liter tiga puluh lima ribu&rdquo;
+            &ldquo;Beli minyak goreng dua liter tiga puluh lima ribu di pasar&rdquo;
           </p>
         </div>
       </div>
@@ -266,7 +266,7 @@ export default function CatatSuaraPage() {
             <div className="w-20 h-20 rounded-full border border-white/10 bg-white/[0.03] flex items-center justify-center mb-5 shadow-[0_0_30px_rgba(255,255,255,0.02)]">
               <Mic className="w-8 h-8 text-slate-400" />
             </div>
-            <p className="text-sm font-medium text-slate-400 text-center px-6">
+            <p className="text-[14px] font-medium text-slate-400 text-center px-6">
               Ketuk tombol mikrofon di bawah untuk mulai bicara
             </p>
           </div>
@@ -296,11 +296,11 @@ export default function CatatSuaraPage() {
             </div>
 
             {/* Timer mono besar */}
-            <div className="text-2xl font-bold font-mono text-rose-400 mb-1 tracking-tight">
+            <div className="text-[24px] font-bold font-mono text-rose-400 mb-1 tracking-tight">
               {formatTime(seconds)}
             </div>
-            <p className="text-xs font-medium text-rose-300/80 mb-4">
-              Sedang mendengarkan...
+            <p className="text-[14px] font-semibold text-rose-300/80 mb-4">
+              Mendengarkan suara Anda...
             </p>
 
             {/* Live speech preview */}
@@ -320,10 +320,10 @@ export default function CatatSuaraPage() {
                 <Sparkles className="w-6 h-6 text-solar-500" />
               </div>
             </div>
-            <p className="text-sm font-medium text-slate-200 text-center mb-1">
-              AI sedang menyusun transaksi...
+            <p className="text-[14px] font-medium text-slate-200 text-center mb-1">
+              AI sedang mendengarkan &amp; menyusun transaksi...
             </p>
-            <p className="text-xs text-slate-500">Mengekstrak nominal dan kategori</p>
+            <p className="text-[12px] text-slate-500">Biasanya butuh 2-3 detik</p>
           </div>
         )}
       </div>
@@ -355,10 +355,9 @@ export default function CatatSuaraPage() {
             stopAllMedia();
             router.push("/catat/manual");
           }}
-          className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-cyan-300 transition-colors"
+          className="text-[14px] text-slate-300 hover:text-solar-300 transition-colors"
         >
-          <Keyboard className="w-3.5 h-3.5" />
-          <span>Suara bising atau tidak jelas? Beralih ke Catat Manual</span>
+          Suara bising atau koneksi lambat? <strong className="underline text-solar-400">Beralih ke Catat Manual</strong>
         </button>
       </div>
 

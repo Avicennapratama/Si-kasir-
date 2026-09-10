@@ -25,6 +25,7 @@ import {
   Eye
 } from "lucide-react";
 import { useAuth } from "@/lib/firebase/auth-context";
+import { generateStudioCaption, enhanceStudioImage } from "@/lib/api/studio.api";
 import { compressImage } from "@/lib/utils/image-compression";
 
 // 4 Pilihan Preset Studio sesuai spec 11-STUDIO-FOTO.md
@@ -292,22 +293,37 @@ export default function StudioPage() {
 
       // Step 2: Generate caption prompt
       setProcessProgress(80);
-      await new Promise((r) => setTimeout(r, 600)); // Smooth UI transition
-      const { resultCaptions, tags } = generateLocalCaptions(
-        productName,
-        productCategory,
-        selectedTone,
-        selectedPlatform
-      );
+      
+      try {
+        const response = await generateStudioCaption({
+          productName,
+          category: productCategory,
+          tone: selectedTone,
+          platform: selectedPlatform,
+          businessId: business?.id || "demo"
+        });
 
-      setCaptions(
-        resultCaptions.map((text, idx) => ({
-          id: idx + 1,
-          text,
-          charCount: text.length,
-        }))
-      );
-      setHashtags(tags);
+        if (response.data?.captions) {
+          setCaptions(
+            response.data.captions.map((text: string, idx: number) => ({
+              id: idx + 1,
+              text,
+              charCount: text.length,
+            }))
+          );
+          setHashtags(response.data.hashtags || []);
+        } else {
+          // fallback
+          const { resultCaptions, tags } = generateLocalCaptions(productName, productCategory, selectedTone, selectedPlatform);
+          setCaptions(resultCaptions.map((text, idx) => ({ id: idx + 1, text, charCount: text.length })));
+          setHashtags(tags);
+        }
+      } catch (error) {
+        console.error("API error, falling back to local captions:", error);
+        const { resultCaptions, tags } = generateLocalCaptions(productName, productCategory, selectedTone, selectedPlatform);
+        setCaptions(resultCaptions.map((text, idx) => ({ id: idx + 1, text, charCount: text.length })));
+        setHashtags(tags);
+      }
 
       setProcessProgress(100);
       setTimeout(() => {
@@ -408,9 +424,9 @@ export default function StudioPage() {
         <div className="space-y-6 relative z-10">
           {/* Section 1: Upload Foto */}
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                1. Unggah Foto Produk Mentah
+            <div className="flex items-center justify-between mb-3">
+              <label className="text-[14px] font-bold text-white">
+                1. Unggah Foto Produk
               </label>
               {imagePreview && (
                 <button
@@ -430,8 +446,8 @@ export default function StudioPage() {
               }}
               className={`relative rounded-3xl border-2 border-dashed transition-all overflow-hidden flex flex-col items-center justify-center ${
                 imagePreview
-                  ? "border-white/20 bg-black/40 h-64"
-                  : "border-white/10 bg-white/[0.02] hover:border-orange-500/40 hover:bg-orange-500/[0.02] h-52 cursor-pointer"
+                  ? "border-white/20 bg-black/40 h-[200px]"
+                  : "border-white/10 bg-white/[0.02] hover:border-orange-500/40 hover:bg-orange-500/[0.02] h-[200px] cursor-pointer"
               }`}
             >
               {imagePreview ? (
@@ -452,32 +468,29 @@ export default function StudioPage() {
                     <Camera className="w-7 h-7" />
                   </div>
                   <p className="text-sm font-semibold text-white mb-1">
-                    Ketuk untuk memilih foto produk
-                  </p>
-                  <p className="text-xs text-slate-400 max-w-[240px] leading-relaxed">
-                    Foto di meja biasa, cahaya cukup. AI akan memoles latar &amp; pencahayaannya.
+                    Klik di sini atau seret file foto
                   </p>
                 </div>
               )}
             </div>
 
             {/* Dual Action Upload Buttons */}
-            <div className="grid grid-cols-2 gap-2.5 mt-2.5">
-              <button
-                type="button"
-                onClick={() => cameraInputRef.current?.click()}
-                className="h-11 rounded-2xl border border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.05] text-xs font-semibold text-slate-200 flex items-center justify-center gap-2 active:scale-95 transition-all"
-              >
-                <Camera className="w-4 h-4 text-orange-400" />
-                <span>Kamera Langsung</span>
-              </button>
+            <div className="grid grid-cols-2 gap-2.5 mt-3">
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="h-11 rounded-2xl border border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.05] text-xs font-semibold text-slate-200 flex items-center justify-center gap-2 active:scale-95 transition-all"
+                className="h-[48px] rounded-2xl border border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.05] text-[13px] font-semibold text-slate-200 flex items-center justify-center gap-2 active:scale-95 transition-all"
               >
                 <Upload className="w-4 h-4 text-cyan-400" />
                 <span>Pilih dari Galeri</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => cameraInputRef.current?.click()}
+                className="h-[48px] rounded-2xl border border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.05] text-[13px] font-semibold text-slate-200 flex items-center justify-center gap-2 active:scale-95 transition-all"
+              >
+                <Camera className="w-4 h-4 text-orange-400" />
+                <span>Ambil Foto Langsung</span>
               </button>
             </div>
           </div>
@@ -522,8 +535,8 @@ export default function StudioPage() {
 
           {/* Section 3: Pilih Gaya Studio */}
           <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2.5">
-              2. Pilih Suasana Studio
+            <label className="block text-[14px] font-bold text-white mb-2.5">
+              2. Pilih Gaya Studio
             </label>
             <div className="grid grid-cols-2 gap-2.5">
               {STUDIO_PRESETS.map((preset) => {
@@ -532,19 +545,16 @@ export default function StudioPage() {
                   <div
                     key={preset.id}
                     onClick={() => setSelectedPreset(preset.id)}
-                    className={`p-3.5 rounded-2xl border cursor-pointer transition-all active:scale-[0.98] relative overflow-hidden ${
+                    className={`p-3.5 rounded-2xl border cursor-pointer transition-all active:scale-[0.98] relative overflow-hidden flex flex-col items-center justify-center text-center ${
                       isSelected
-                        ? `bg-white/[0.05] ${preset.borderGlow} shadow-[0_0_20px_rgba(255,137,24,0.15)]`
+                        ? `bg-white/[0.05] border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.15)]`
                         : "bg-white/[0.02] border-white/[0.06] hover:border-white/10"
                     }`}
                   >
                     <div className="text-2xl mb-1.5">{preset.iconLabel}</div>
-                    <div className="text-xs font-bold text-white mb-0.5">{preset.name}</div>
-                    <div className="text-[10px] text-slate-400 leading-tight">
-                      {preset.subtitle}
-                    </div>
+                    <div className="text-[12px] font-medium text-white mb-0.5">{preset.name}</div>
                     {isSelected && (
-                      <div className="absolute top-2.5 right-2.5 w-4 h-4 rounded-full bg-orange-500 flex items-center justify-center text-slate-950 text-[10px] font-bold">
+                      <div className="absolute top-2.5 right-2.5 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center text-white text-[10px] font-bold">
                         ✓
                       </div>
                     )}
@@ -555,16 +565,16 @@ export default function StudioPage() {
           </div>
 
           {/* Section 4: Tone Caption & Target Platform */}
-          <div className="p-4 rounded-3xl bg-white/[0.02] border border-white/[0.06] space-y-4">
+          <div className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                3. Nada Bicara Caption
+              <label className="block text-[14px] font-bold text-white mb-2">
+                3. Tone Caption
               </label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="flex overflow-x-auto gap-2 pb-2 hide-scrollbar">
                 {(
                   [
                     { id: "ramah", label: "Santai & Ramah", desc: "Hangat bersahabat" },
-                    { id: "promo", label: "Promo & Diskon", desc: "Ajak beli sekarang" },
+                    { id: "promo", label: "Promo Diskon", desc: "Ajak beli sekarang" },
                     { id: "elegan", label: "Elegan & Mewah", desc: "Kesan premium" },
                     { id: "informatif", label: "Informatif", desc: "Fokus mutu & proses" },
                   ] as const
@@ -573,48 +583,17 @@ export default function StudioPage() {
                     key={t.id}
                     type="button"
                     onClick={() => setSelectedTone(t.id)}
-                    className={`p-2.5 rounded-xl border text-left transition-all ${
+                    className={`shrink-0 px-4 py-2 rounded-full border transition-all text-[13px] font-semibold ${
                       selectedTone === t.id
-                        ? "bg-orange-500/10 border-orange-500/40 text-orange-400"
+                        ? "bg-emerald-500/10 border-emerald-500 text-emerald-400"
                         : "bg-white/[0.02] border-white/[0.06] text-slate-400"
                     }`}
                   >
-                    <div className="text-xs font-bold text-white">{t.label}</div>
-                    <div className="text-[10px] text-slate-400">{t.desc}</div>
+                    {t.label}
                   </button>
                 ))}
               </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-                Target Media Sosial
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { id: "whatsapp", label: "WhatsApp", icon: MessageCircle },
-                  { id: "instagram", label: "Instagram", icon: Instagram },
-                  { id: "tiktok", label: "TikTok", icon: Smartphone },
-                ].map((item) => {
-                  const Icon = item.icon;
-                  const isSelected = selectedPlatform === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setSelectedPlatform(item.id as SocialPlatform)}
-                      className={`h-9 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                        isSelected
-                          ? "bg-cyan-500/10 border-cyan-500/40 text-cyan-400"
-                          : "bg-white/[0.02] border-white/[0.06] text-slate-400"
-                      }`}
-                    >
-                      <Icon className="w-3.5 h-3.5" />
-                      <span>{item.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
+              <p className="text-[11px] text-slate-400 mt-1">Pilih nada bicara sesuai visi jualanmu.</p>
             </div>
           </div>
 
@@ -623,21 +602,21 @@ export default function StudioPage() {
             type="button"
             onClick={handleGenerate}
             disabled={!imagePreview || isProcessing}
-            className={`w-full h-13 py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] ${
+            className={`w-full h-[52px] rounded-2xl font-bold text-[14px] flex items-center justify-center gap-2 transition-all active:scale-[0.98] ${
               !imagePreview || isProcessing
                 ? "bg-white/10 text-slate-500 cursor-not-allowed border border-white/5"
-                : "bg-gradient-to-r from-orange-500 to-rose-600 text-white shadow-[0_0_25px_rgba(255,137,24,0.35)] hover:shadow-[0_0_35px_rgba(255,137,24,0.5)] cursor-pointer"
+                : "bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.4)] cursor-pointer"
             }`}
           >
             {isProcessing ? (
               <>
                 <RefreshCw className="w-5 h-5 animate-spin" />
-                <span>Memoles Foto &amp; Meracik Caption... {processProgress}%</span>
+                <span>Memproses... {processProgress}%</span>
               </>
             ) : (
               <>
                 <Wand2 className="w-5 h-5" />
-                <span>Sulap Foto &amp; Buat Caption Sekarang</span>
+                <span>Generate Caption &amp; Foto</span>
               </>
             )}
           </button>
@@ -697,6 +676,8 @@ export default function StudioPage() {
               </div>
             </div>
 
+          {/* Hero Visual Preview: Before / After */}
+          <div className="space-y-4">
             {/* Container Gambar */}
             <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-black/60 shadow-2xl flex items-center justify-center min-h-[280px]">
               <img
@@ -707,111 +688,86 @@ export default function StudioPage() {
 
               {/* Tag Sudut */}
               <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md border border-white/10 text-[10px] font-bold tracking-wide">
-                {compareMode === "original" ? "📷 Foto Mentah" : "✨ Studio AI Enhanced"}
+                {compareMode === "original" ? "📷 Foto Mentah" : "✨ Studio AI"}
               </div>
 
-              <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md border border-white/10 text-[10px] text-slate-300 font-mono">
-                {STUDIO_PRESETS.find((p) => p.id === selectedPreset)?.name}
+              {/* Compare Toggle at bottom center */}
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1 p-1 rounded-xl bg-black/70 backdrop-blur-md border border-white/[0.1]">
+                <button
+                  type="button"
+                  onClick={() => setCompareMode("original")}
+                  className={`px-3 py-1 rounded-lg text-[10px] font-semibold transition-all ${
+                    compareMode === "original"
+                      ? "bg-white/20 text-white"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Asli
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCompareMode("enhanced")}
+                  className={`px-3 py-1 rounded-lg text-[10px] font-semibold transition-all ${
+                    compareMode === "enhanced"
+                      ? "bg-emerald-500 text-white"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Studio
+                </button>
               </div>
             </div>
 
-            {/* Tombol Unduh Foto */}
-            <button
-              type="button"
-              onClick={handleDownloadImage}
-              className="w-full h-12 rounded-2xl bg-white/[0.05] border border-white/[0.12] hover:bg-white/[0.08] text-white text-xs font-bold flex items-center justify-center gap-2 active:scale-95 transition-all shadow-[0_0_15px_rgba(255,255,255,0.05)]"
-            >
-              <Download className="w-4 h-4 text-orange-400" />
-              <span>Unduh Foto Studio HD (.JPG)</span>
-            </button>
-          </div>
-
-          {/* Section: 3 Pilihan Caption AI */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                Pilihan Caption Promosi (Tone: {selectedTone})
-              </label>
-              <span className="text-[10px] text-orange-400 font-medium">
-                Pilih 1 untuk disalin
-              </span>
+            {/* Caption Preview */}
+            <div className="p-4 rounded-3xl bg-white/[0.02] border border-white/[0.06] text-center space-y-3">
+              <p className="text-[14px] text-white leading-relaxed font-medium">
+                &ldquo;{captions[0]?.text || "Caption menarik untuk produkmu."}&rdquo;
+              </p>
+              <p className="text-[12px] text-cyan-400 font-mono">
+                {hashtags.join(" ")}
+              </p>
             </div>
 
-            {captions.map((cap) => (
-              <div
-                key={cap.id}
-                className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.08] hover:border-white/15 transition-all space-y-2.5"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/[0.05] text-slate-400">
-                    Opsi {cap.id}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleCopyCaption(cap.text, cap.id)}
-                    className={`px-3 py-1 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 ${
-                      copiedIndex === cap.id
-                        ? "bg-emerald-500 text-slate-950"
-                        : "bg-orange-500/10 text-orange-400 border border-orange-500/30 hover:bg-orange-500/20"
-                    }`}
-                  >
-                    {copiedIndex === cap.id ? (
-                      <>
-                        <Check className="w-3.5 h-3.5" />
-                        <span>Tersalin!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5" />
-                        <span>Salin Teks</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                <p className="text-xs text-slate-200 leading-relaxed italic">
-                  &ldquo;{cap.text}&rdquo;
-                </p>
-              </div>
-            ))}
-          </div>
-
-          {/* Section: Hashtags Pintar */}
-          <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-300">
-                <Tag className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Rekomendasi Hashtag</span>
-              </div>
+            {/* Dua Tombol Aksi Bawah */}
+            <div className="flex gap-3 pt-2">
               <button
                 type="button"
-                onClick={handleCopyHashtags}
-                className="text-[11px] font-semibold text-cyan-400 hover:underline flex items-center gap-1"
+                onClick={handleDownloadImage}
+                className="flex-1 h-[48px] rounded-2xl border border-white/[0.1] bg-transparent text-slate-300 hover:text-white text-[14px] font-semibold flex items-center justify-center gap-2 active:scale-95 transition-all"
               >
-                {copiedHashtags ? "Tersalin! ✓" : "Salin Semua Tag"}
+                <Download className="w-4 h-4" />
+                <span>Unduh Foto</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleCopyCaption(captions[0]?.text || "", 1)}
+                className="flex-1 h-[48px] rounded-2xl bg-white/[0.05] border border-white/[0.1] hover:bg-white/[0.1] text-white text-[14px] font-semibold flex items-center justify-center gap-2 active:scale-95 transition-all"
+              >
+                {copiedIndex === 1 ? (
+                  <>
+                    <Check className="w-4 h-4 text-emerald-400" />
+                    <span className="text-emerald-400">Tersalin!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    <span>Salin Caption</span>
+                  </>
+                )}
               </button>
             </div>
-            <div className="flex flex-wrap gap-1.5">
-              {hashtags.map((h, i) => (
-                <span
-                  key={i}
-                  className="text-[11px] font-mono px-2 py-0.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-300"
-                >
-                  {h}
-                </span>
-              ))}
-            </div>
-          </div>
 
-          {/* Action: Buat Foto Baru */}
-          <button
-            type="button"
-            onClick={() => setActiveStep(1)}
-            className="w-full h-12 rounded-2xl border border-white/[0.08] bg-transparent text-slate-400 hover:text-white text-xs font-semibold flex items-center justify-center gap-2 active:scale-95 transition-all"
-          >
-            <RefreshCw className="w-4 h-4" />
-            <span>Buat Foto Produk Lain</span>
-          </button>
+            {/* Action: Buat Foto Baru */}
+            <button
+              type="button"
+              onClick={() => setActiveStep(1)}
+              className="w-full h-12 rounded-2xl border border-white/[0.08] bg-transparent text-slate-400 hover:text-white text-xs font-semibold flex items-center justify-center gap-2 active:scale-95 transition-all mt-4"
+            >
+              <RefreshCw className="w-4 h-4" />
+              <span>Buat Foto Produk Lain</span>
+            </button>
+          </div>
         </div>
       )}
     </main>

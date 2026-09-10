@@ -20,6 +20,7 @@ import {
   Scale
 } from "lucide-react";
 import { useAuth } from "@/lib/firebase/auth-context";
+import { calculateHkiValuation } from "@/lib/api/hki.api";
 
 // Opsi Jenis Karya / HKI
 const ASSET_TYPES = [
@@ -46,11 +47,11 @@ const MARKET_OPTIONS = [
 
 // Checklist Keunikan Aset
 const UNIQUENESS_ITEMS = [
-  { id: "original", label: "Dibuat sendiri / resep orisinal (bukan tiruan)" },
-  { id: "commercial", label: "Sudah aktif digunakan bertransaksi & dipromosikan" },
-  { id: "records", label: "Memiliki bukti/catatan tanggal pertama kali dibuat" },
-  { id: "reputation", label: "Merek/karya sudah dikenal pelanggan setia" },
-  { id: "unregistered", label: "Belum pernah diklaim atau didaftarkan pihak lain" },
+  { id: "resep", label: "Resep rahasia sendiri" },
+  { id: "logo", label: "Logo desain orisinal" },
+  { id: "metode", label: "Metode produksi khas" },
+  { id: "promo", label: "Paket promosi spesial" },
+  { id: "lainnya", label: "Lainnya" },
 ];
 
 export default function HkiValuationPage() {
@@ -64,10 +65,12 @@ export default function HkiValuationPage() {
   const [monthlyRevenue, setMonthlyRevenue] = useState("15000000"); // 15jt default
   const [marketReach, setMarketReach] = useState("city");
   const [checkedUniqueness, setCheckedUniqueness] = useState<string[]>([
-    "original",
-    "commercial",
-    "unregistered",
+    "resep",
+    "logo",
+    "metode",
+    "promo",
   ]);
+  const [otherUniqueness, setOtherUniqueness] = useState("");
 
   // Status & Modal
   const [isDownloading, setIsDownloading] = useState(false);
@@ -104,6 +107,30 @@ export default function HkiValuationPage() {
     }
   };
 
+  const [aiAnalysis, setAiAnalysis] = useState<any>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const { business } = useAuth();
+
+  const handleAIAnalysis = async () => {
+    setIsAnalyzing(true);
+    try {
+      const response = await calculateHkiValuation({
+        businessId: business?.id || "demo",
+        brandName: assetName,
+        category: ASSET_TYPES.find((t) => t.id === assetType)?.label,
+        evidence: checkedUniqueness,
+        usage: "Penggunaan lokal dan online",
+        targetMarket: marketReach
+      });
+      setAiAnalysis(response.data || response);
+    } catch (err) {
+      console.error("AI Analysis failed:", err);
+      alert("Gagal melakukan analisis AI. Silakan coba lagi.");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   // Kalkulasi Indikatif Valuasi & Kesiapan HKI
   const analysis = useMemo(() => {
     const rev = parseInt(monthlyRevenue || "0", 10);
@@ -123,10 +150,10 @@ export default function HkiValuationPage() {
     // Skor Kesiapan Pendaftaran DJKI (0 - 100)
     let score = 30; // base score jika ada nama & omzet
     if (assetName.trim().length >= 3) score += 15;
-    if (checkedUniqueness.includes("original")) score += 20;
-    if (checkedUniqueness.includes("commercial")) score += 15;
-    if (checkedUniqueness.includes("unregistered")) score += 10;
-    if (checkedUniqueness.includes("records")) score += 10;
+    if (checkedUniqueness.includes("resep")) score += 20;
+    if (checkedUniqueness.includes("logo")) score += 15;
+    if (checkedUniqueness.includes("metode")) score += 10;
+    if (checkedUniqueness.includes("promo")) score += 10;
 
     score = Math.min(score, 100);
 
@@ -189,7 +216,7 @@ export default function HkiValuationPage() {
       />
 
       {/* Top Header */}
-      <div className="flex items-center justify-between mb-5 relative z-10">
+      <div className="flex items-center justify-between mb-6 relative z-10">
         <button
           type="button"
           onClick={() => router.push("/ekraf")}
@@ -198,135 +225,95 @@ export default function HkiValuationPage() {
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="text-center">
-          <h1 className="text-base font-bold text-white">Pra-Valuasi HKI</h1>
-          <p className="text-[11px] text-emerald-400 font-medium">
-            Klinik Hak Kekayaan Intelektual
-          </p>
+          <h1 className="text-[20px] font-bold text-white">Pra-Valuasi HKI</h1>
         </div>
         <div className="w-10" />
-      </div>
-
-      {/* Intro Card */}
-      <div className="p-4 rounded-3xl bg-emerald-500/[0.04] border border-emerald-500/20 mb-6 relative z-10">
-        <div className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0 mt-0.5">
-            <ShieldCheck className="w-5 h-5" />
-          </div>
-          <div>
-            <h2 className="text-xs font-bold text-emerald-300 mb-0.5">
-              Lindungi Aset Tak Berwujud Anda
-            </h2>
-            <p className="text-[11px] text-slate-300 leading-relaxed">
-              Merek, resep, dan logo adalah aset bernilai uang yang bisa dijadikan bukti saat
-              mengajukan pembiayaan, investor, atau pendaftaran resmi ke DJKI Kemenkumham.
-            </p>
-          </div>
-        </div>
       </div>
 
       {/* ============================================================ */}
       {/* FORMULIR PRA-VALUASI                                         */}
       {/* ============================================================ */}
-      <div className="space-y-5 relative z-10">
+      <div className="space-y-6 relative z-10">
+        <h2 className="text-[14px] font-semibold text-white">Nilai Aset Merek/Karya</h2>
+
         {/* A. Nama Merek / Karya */}
-        <div className="p-4 rounded-3xl bg-white/[0.02] border border-white/[0.06] space-y-3">
-          <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-              A. Nama Merek / Karya / Produk
-            </label>
+        <div className="space-y-1.5">
+          <label className="block text-[13px] text-white">
+            Nama Merek / Nama Karya
+          </label>
+          <input
+            type="text"
+            value={assetName}
+            onChange={(e) => setAssetName(e.target.value)}
+            placeholder="Contoh: Keripik Singkong Nenek"
+            className="w-full h-11 px-3.5 rounded-xl bg-white/[0.02] border border-white/[0.08] focus:border-emerald-500/50 text-[14px] text-white placeholder-slate-500 outline-none transition-colors"
+          />
+        </div>
+
+        {/* B. Lama Beroperasi Usaha */}
+        <div className="space-y-1.5">
+          <label className="block text-[13px] text-white">
+            Lama Beroperasi Usaha
+          </label>
+          <div className="flex flex-col gap-2">
+            {[
+              { id: "under1", label: "Kurang Dari 1 Tahun" },
+              { id: "1to3", label: "1 – 3 Tahun" },
+              { id: "above3", label: "Lebih Dari 3 Tahun" },
+            ].map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => setBusinessAge(opt.id)}
+                className={`h-[48px] rounded-xl border text-[13px] font-semibold transition-all flex items-center justify-center ${
+                  businessAge === opt.id
+                    ? "bg-emerald-500/10 border-emerald-500 text-emerald-400"
+                    : "bg-white/[0.02] border-white/[0.06] text-slate-400"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* C. Rata-rata Penjualan Bulanan */}
+        <div className="space-y-1.5">
+          <label className="block text-[13px] text-white">
+            Rata-rata Penjualan Bulanan
+          </label>
+          <div className="relative">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[14px] font-medium text-emerald-400">
+              Rp
+            </span>
             <input
               type="text"
-              value={assetName}
-              onChange={(e) => setAssetName(e.target.value)}
-              placeholder="Contoh: Sambal Bu Broto, Kopi Janji Kita..."
-              className="w-full h-11 px-3.5 rounded-xl bg-black/50 border border-white/[0.08] focus:border-emerald-500/50 text-sm text-white placeholder-slate-500 outline-none transition-colors"
+              value={formatInputRupiah(monthlyRevenue)}
+              onChange={handleRevenueChange}
+              placeholder="Masukkan rata-rata penjualan bulan ini"
+              className="w-full h-[48px] pl-10 pr-3.5 rounded-xl bg-white/[0.02] border border-white/[0.08] focus:border-emerald-500/50 text-[14px] font-medium text-white placeholder-slate-500 outline-none transition-colors"
             />
           </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-              Jenis Aset HKI
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {ASSET_TYPES.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setAssetType(t.id)}
-                  className={`p-2.5 rounded-xl border text-left text-xs font-semibold transition-all ${
-                    assetType === t.id
-                      ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.15)]"
-                      : "bg-white/[0.02] border-white/[0.06] text-slate-400 hover:text-white"
-                  }`}
-                >
-                  <div className="truncate">{t.label}</div>
-                  <div className="text-[10px] text-slate-500 font-normal">{t.defaultClass}</div>
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
 
-        {/* B & C. Lama Usaha & Omzet Bulanan */}
-        <div className="p-4 rounded-3xl bg-white/[0.02] border border-white/[0.06] space-y-3.5">
-          <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-              B. Lama Usaha / Karya Digunakan
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              {AGE_OPTIONS.map((opt) => (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => setBusinessAge(opt.id)}
-                  className={`h-10 rounded-xl border text-xs font-semibold transition-all ${
-                    businessAge === opt.id
-                      ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-300"
-                      : "bg-white/[0.02] border-white/[0.06] text-slate-400"
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-              C. Rata-rata Penjualan / Omzet Bulanan
-            </label>
-            <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-mono font-bold text-emerald-400">
-                Rp
-              </span>
-              <input
-                type="text"
-                value={formatInputRupiah(monthlyRevenue)}
-                onChange={handleRevenueChange}
-                placeholder="0"
-                className="w-full h-12 pl-12 pr-3.5 rounded-xl bg-black/50 border border-white/[0.08] focus:border-emerald-500/50 text-base font-mono font-bold text-white placeholder-slate-600 outline-none transition-colors"
-              />
-            </div>
-            <p className="text-[10px] text-slate-400 mt-1">
-              Diproyeksikan ~{toRupiah(analysis.annualRevenue)} per tahun.
-            </p>
-          </div>
-        </div>
-
-        {/* D. Jangkauan Pasar */}
-        <div className="p-4 rounded-3xl bg-white/[0.02] border border-white/[0.06]">
-          <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-            D. Wilayah Jangkauan Pembeli
+        {/* D. Wilayah Jangkauan Pembeli */}
+        <div className="space-y-1.5">
+          <label className="block text-[13px] text-white">
+            Wilayah Jangkauan Pembeli
           </label>
-          <div className="grid grid-cols-3 gap-2">
-            {MARKET_OPTIONS.map((m) => (
+          <div className="flex flex-wrap gap-2">
+            {[
+              { id: "city", label: "Satu Kota" },
+              { id: "province", label: "Antar Provinsi" },
+              { id: "export", label: "Ekspor" },
+            ].map((m) => (
               <button
                 key={m.id}
                 type="button"
                 onClick={() => setMarketReach(m.id)}
-                className={`p-2 rounded-xl border text-center text-xs font-semibold transition-all ${
+                className={`px-4 h-[40px] rounded-full border text-[13px] font-semibold transition-all ${
                   marketReach === m.id
-                    ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-300"
+                    ? "bg-emerald-500/10 border-emerald-500 text-emerald-400"
                     : "bg-white/[0.02] border-white/[0.06] text-slate-400"
                 }`}
               >
@@ -336,40 +323,45 @@ export default function HkiValuationPage() {
           </div>
         </div>
 
-        {/* E. Checklist Keunikan */}
-        <div className="p-4 rounded-3xl bg-white/[0.02] border border-white/[0.06] space-y-2.5">
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-              E. Checklist Keunikan &amp; Legalitas
-            </label>
-            <span className="text-[10px] text-emerald-400 font-mono">
-              {checkedUniqueness.length} / 5 Terpenuhi
-            </span>
-          </div>
-
+        {/* E. Keunikan / Rahasia Dagang (Checklist) */}
+        <div className="space-y-1.5">
+          <label className="block text-[13px] text-white">
+            Keunikan / Rahasia Dagang
+          </label>
           <div className="space-y-2">
             {UNIQUENESS_ITEMS.map((item) => {
               const isChecked = checkedUniqueness.includes(item.id);
               return (
-                <div
-                  key={item.id}
-                  onClick={() => toggleUniqueness(item.id)}
-                  className={`p-2.5 rounded-xl border flex items-start gap-2.5 cursor-pointer transition-all ${
-                    isChecked
-                      ? "bg-emerald-500/[0.06] border-emerald-500/30 text-white"
-                      : "bg-white/[0.01] border-white/[0.04] text-slate-400 hover:border-white/10"
-                  }`}
-                >
+                <div key={item.id} className="space-y-2">
                   <div
-                    className={`w-4 h-4 rounded-md mt-0.5 flex items-center justify-center text-[10px] font-bold shrink-0 transition-colors ${
+                    onClick={() => toggleUniqueness(item.id)}
+                    className={`h-[48px] px-3.5 rounded-xl border flex items-center gap-3 cursor-pointer transition-all ${
                       isChecked
-                        ? "bg-emerald-500 text-slate-950"
-                        : "border border-white/20 text-transparent"
+                        ? "bg-emerald-500/[0.06] border-emerald-500 text-white"
+                        : "bg-white/[0.01] border-white/[0.06] text-slate-400"
                     }`}
                   >
-                    ✓
+                    <div
+                      className={`w-5 h-5 rounded-md flex items-center justify-center text-[12px] font-bold shrink-0 transition-colors ${
+                        isChecked
+                          ? "bg-emerald-500 text-slate-950"
+                          : "border border-white/20 text-transparent"
+                      }`}
+                    >
+                      ✓
+                    </div>
+                    <span className="text-[13px] font-medium">{item.label}</span>
                   </div>
-                  <span className="text-xs leading-snug select-none">{item.label}</span>
+                  {item.id === "lainnya" && isChecked && (
+                    <input
+                      type="text"
+                      value={otherUniqueness}
+                      onChange={(e) => setOtherUniqueness(e.target.value)}
+                      placeholder="Sebutkan keunikan lainnya..."
+                      className="w-full h-[40px] px-3.5 rounded-xl bg-white/[0.02] border border-white/[0.08] focus:border-emerald-500/50 text-[13px] text-white placeholder-slate-500 outline-none transition-colors ml-8"
+                      style={{ width: "calc(100% - 2rem)" }}
+                    />
+                  )}
                 </div>
               );
             })}
@@ -379,105 +371,98 @@ export default function HkiValuationPage() {
         {/* ============================================================ */}
         {/* HASIL ANALISIS INDIKATIF AI                                 */}
         {/* ============================================================ */}
-        <div className="p-5 rounded-3xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] border border-white/10 space-y-4 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-400">
-              <Sparkles className="w-4 h-4" />
-              <span>Hasil Analisis Indikatif AI</span>
+        <div className="h-[140px] grid grid-cols-2 gap-3 mt-6">
+          {/* Kolom Kiri */}
+          <div className="p-3 rounded-2xl bg-white/[0.02] border border-white/[0.06] flex flex-col justify-center">
+            <h3 className="text-[12px] font-semibold text-emerald-400 mb-1">Estimasi Nilai Merek</h3>
+            <div className="text-[14px] sm:text-[16px] font-bold text-white mb-1 leading-tight">
+              {toRupiah(analysis.minValuation)} <br />
+              <span className="text-[12px] font-normal text-slate-400">s/d</span> <br />
+              {toRupiah(analysis.maxValuation)}
             </div>
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 font-semibold">
-              Live Valuasi
-            </span>
-          </div>
-
-          {/* Estimasi Nilai Ekonomi */}
-          <div>
-            <div className="text-[11px] text-slate-400 mb-1">
-              Estimasi Nilai Aset Tak Berwujud ({assetName || "Merek"}):
-            </div>
-            <div className="text-lg sm:text-xl font-mono font-bold text-white tracking-tight">
-              <span className="text-emerald-400">{toRupiah(analysis.minValuation)}</span>
-              <span className="text-slate-500 text-sm font-normal mx-2">s/d</span>
-              <span className="text-emerald-400">{toRupiah(analysis.maxValuation)}</span>
-            </div>
-            <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">
-              Dihitung berdasarkan kapitalisasi omzet, durasi operasional pasar, dan rasio keunikan
-              produk.
+            <p className="text-[10px] text-slate-500 leading-tight">
+              Berdasarkan omzet pasar rata-rata & keunikan produk
             </p>
           </div>
 
-          <div className="h-px bg-white/[0.08]" />
-
-          {/* Skor Kesiapan DJKI */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-300">Skor Kesiapan Daftar DJKI:</span>
-              <span className="text-sm font-mono font-bold text-white">
-                {analysis.score} / 100
-              </span>
+          {/* Kolom Kanan */}
+          <div className="p-3 rounded-2xl bg-white/[0.02] border border-white/[0.06] flex flex-col justify-center items-center text-center">
+            <h3 className="text-[12px] font-semibold text-slate-300 mb-2">Skor Kesiapan Daftar HKI</h3>
+            <div className="text-[16px] font-bold text-emerald-400 mb-1">
+              {analysis.score}/100
             </div>
-
-            {/* Progress Bar */}
-            <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-emerald-400 transition-all duration-500"
-                style={{ width: `${analysis.score}%` }}
-              />
-            </div>
-
-            <div className="flex items-center justify-between text-[11px]">
-              <span className={`font-semibold ${analysis.statusColor}`}>
-                {analysis.statusText}
-              </span>
-              <span className="text-slate-400">{analysis.classNote}</span>
+            <p className="text-[11px] text-white leading-tight mb-2">
+              {analysis.score >= 80 ? "Sangat Siap Didaftarkan ke DJKI" : "Perlu Melengkapi Data"}
+            </p>
+            <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+              <div className="h-full bg-emerald-500 transition-all" style={{ width: `${analysis.score}%` }} />
             </div>
           </div>
         </div>
 
-        {/* Disclaimer Legalitas Wajib (sesuai PRD & AI Prompts) */}
-        <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/[0.06] text-[11px] text-slate-400 leading-relaxed space-y-1">
-          <div className="flex items-center gap-1.5 text-amber-400 font-semibold">
-            <AlertTriangle className="w-3.5 h-3.5" />
-            <span>Disclaimer Resmi</span>
-          </div>
-          <p>
-            Laporan pra-valuasi ini bersifat indikasi awal &amp; edukasi independen, bukan dokumen
-            hukum resmi atau jaminan persetujuan kredit bank. Untuk pendaftaran hak cipta/merek
-            resmi negara, kunjungi portal resmi DJKI di <em>pdki-indonesia.dgip.go.id</em>.
+        {/* Disclaimer Legalitas */}
+        <div className="p-3 bg-white/[0.02] border border-white/[0.06] rounded-[12px] mb-[80px]">
+          <p className="text-[11px] text-slate-400 text-center leading-relaxed">
+            Laporan ini bersifat edukasi dan indikasi awal, bukan dokumen penaksir resmi penjaminan bank atau otoritas hukum. Untuk nilai hakim, konsultasikan dengan AHU atau perwakilan hukum.
           </p>
         </div>
 
-        {/* Tombol Aksi Bawah */}
-        <div className="grid grid-cols-3 gap-2.5 pt-2">
-          {/* Reset */}
+        {/* AI Deep Analysis Section */}
+        {aiAnalysis ? (
+          <div className="mt-6 p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20">
+            <h3 className="text-[14px] font-bold text-emerald-400 mb-2 flex items-center gap-2">
+              <Sparkles className="w-4 h-4" /> Analisis Mendalam AI
+            </h3>
+            <p className="text-[13px] text-slate-300 leading-relaxed mb-3">
+              {aiAnalysis.summary}
+            </p>
+            <div className="space-y-1">
+              <p className="text-[12px] text-slate-400 font-semibold mb-1">Rekomendasi Langkah:</p>
+              {aiAnalysis.recommendations?.map((rec: string, i: number) => (
+                <div key={i} className="flex gap-2 text-[12px] text-slate-300">
+                  <span className="text-emerald-500">•</span>
+                  <span>{rec}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={handleAIAnalysis}
+            disabled={!assetName || !monthlyRevenue || isAnalyzing}
+            className={`mt-4 w-full h-[48px] rounded-xl font-semibold text-[13px] flex items-center justify-center gap-2 transition-all ${
+              !assetName || !monthlyRevenue || isAnalyzing
+                ? "bg-white/[0.05] text-slate-500 cursor-not-allowed"
+                : "bg-white/[0.05] border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
+            }`}
+          >
+            {isAnalyzing ? "AI Sedang Menganalisa..." : <><Sparkles className="w-4 h-4" /> Dapatkan Analisis Mendalam AI</>}
+          </button>
+        )}
+      </div>
+
+      {/* Sticky Footer */}
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md p-4 bg-[#090A0F]/80 backdrop-blur-md border-t border-white/[0.08] z-50">
+        <div className="flex gap-3">
           <button
             type="button"
             onClick={handleReset}
-            className="h-12 rounded-2xl border border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.05] text-xs font-semibold text-slate-400 hover:text-white flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+            className="flex-1 h-[48px] rounded-2xl bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 font-semibold text-[13px] transition-all"
           >
-            <RotateCcw className="w-4 h-4" />
-            <span>Reset</span>
+            Hapus Formulir
           </button>
-
-          {/* Unduh Dokumen PDF Siap Cetak */}
           <button
             type="button"
             onClick={handleDownloadPdf}
-            disabled={isDownloading || !assetName.trim()}
-            className={`col-span-2 h-12 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-all shadow-[0_0_20px_rgba(16,185,129,0.25)] ${
-              !assetName.trim()
-                ? "bg-white/10 text-slate-500 cursor-not-allowed"
-                : "bg-gradient-to-r from-emerald-500 to-teal-600 text-slate-950 hover:brightness-110"
+            disabled={!assetName || !monthlyRevenue}
+            className={`flex-[2] h-[48px] rounded-2xl font-semibold text-[13px] transition-all ${
+              !assetName || !monthlyRevenue
+                ? "bg-white/[0.05] text-slate-500 cursor-not-allowed"
+                : "bg-emerald-500 hover:bg-emerald-600 text-white"
             }`}
           >
-            {isDownloading ? (
-              <span>Menyiapkan Dokumen...</span>
-            ) : (
-              <>
-                <FileText className="w-4 h-4" />
-                <span>Cetak / Simpan Dokumen PDF</span>
-              </>
-            )}
+            {isDownloading ? "Menyiapkan..." : "Unduh Laporan (PDF)"}
           </button>
         </div>
       </div>

@@ -98,25 +98,25 @@ export function DraftReviewScreen({
           <button
             type="button"
             onClick={() => setShowRejectConfirm(true)}
-            className="w-10 h-10 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-slate-400 hover:text-white transition-all active:scale-95"
+            className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-slate-400 hover:text-white transition-all active:scale-95"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <span className="text-[18px] leading-none mb-0.5">✕</span>
           </button>
 
           <div className="flex items-center gap-2">
-            <h1 className="text-base font-bold text-white">Periksa Hasil AI</h1>
+            <h1 className="text-[18px] font-bold text-white tracking-wide">Periksa Hasil AI</h1>
           </div>
 
           {/* Source Badge */}
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/[0.04] border border-white/[0.08] text-slate-300">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold bg-white/[0.04] border border-white/[0.08] text-slate-300">
             {draft.source === "voice" ? (
               <>
-                <Mic className="w-3.5 h-3.5 text-cyan-400" />
+                <span>🎙️</span>
                 <span>Suara</span>
               </>
             ) : (
               <>
-                <Receipt className="w-3.5 h-3.5 text-solar-400" />
+                <span>📷</span>
                 <span>Nota</span>
               </>
             )}
@@ -331,22 +331,21 @@ export function DraftReviewScreen({
           <button
             type="button"
             onClick={() => setShowRejectConfirm(true)}
-            className="w-28 h-12 rounded-2xl border border-rose-500/30 bg-rose-500/[0.05] text-rose-400 hover:bg-rose-500/10 text-xs font-semibold flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+            className="w-[100px] h-[52px] rounded-xl border border-rose-500/50 bg-transparent text-rose-500 hover:bg-rose-500/10 text-[14px] font-semibold flex items-center justify-center gap-1.5 active:scale-95 transition-all"
           >
-            <Trash2 className="w-3.5 h-3.5" />
-            <span>Hapus</span>
+            <span>Hapus Draft</span>
           </button>
 
           <button
             type="submit"
             form="review-form"
             disabled={isSubmitting || formData.amount <= 0}
-            className="flex-1 h-12 rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-slate-950 font-bold text-sm flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(16,185,129,0.35)] active:scale-[0.98] transition-all disabled:opacity-50"
+            className="flex-1 h-[52px] rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold text-[16px] flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(16,185,129,0.35)] active:scale-[0.98] transition-all disabled:opacity-50"
           >
             {isSubmitting ? (
-              <RefreshCw className="w-4 h-4 animate-spin text-slate-950" />
+              <RefreshCw className="w-4 h-4 animate-spin text-white" />
             ) : (
-              <Check className="w-4 h-4 text-slate-950 stroke-[3]" />
+              <span>✅</span>
             )}
             <span>Benar &amp; Simpan</span>
           </button>

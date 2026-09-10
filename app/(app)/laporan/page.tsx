@@ -416,11 +416,11 @@ export default function LaporanPage() {
             />
 
             <div className="relative z-10 text-center pb-3 border-b border-white/[0.06] print:border-slate-200">
-              <span className="text-[11px] uppercase font-semibold text-slate-400 tracking-wider block mb-1 print:text-slate-600">
+              <span className="text-[12px] uppercase font-semibold text-slate-400 tracking-wider block mb-1 print:text-slate-600">
                 Laba Bersih ({periodLabel})
               </span>
               <div
-                className={`text-2xl sm:text-3xl font-bold font-mono tracking-tight ${
+                className={`text-[28px] font-bold font-mono tracking-tight ${
                   netBalance >= 0 ? "text-emerald-400 print:text-emerald-600" : "text-rose-400 print:text-rose-600"
                 }`}
               >
@@ -437,18 +437,18 @@ export default function LaporanPage() {
             {/* Dua Kolom Total Masuk & Keluar */}
             <div className="grid grid-cols-2 gap-3 pt-3 text-center divide-x divide-white/[0.06] print:divide-slate-200">
               <div>
-                <span className="text-[10px] text-slate-400 uppercase font-semibold tracking-wider block mb-0.5 print:text-slate-600">
-                  Total Masuk
+                <span className="text-[12px] text-slate-400 font-semibold tracking-wider block mb-0.5 print:text-slate-600">
+                  Total Pemasukan
                 </span>
-                <span className="text-sm sm:text-base font-bold font-mono text-emerald-400 print:text-emerald-600 block truncate">
+                <span className="text-[16px] font-semibold font-mono text-emerald-400 print:text-emerald-600 block truncate">
                   +{formatRupiah(totalIncome)}
                 </span>
               </div>
               <div className="pl-2">
-                <span className="text-[10px] text-slate-400 uppercase font-semibold tracking-wider block mb-0.5 print:text-slate-600">
-                  Total Keluar
+                <span className="text-[12px] text-slate-400 font-semibold tracking-wider block mb-0.5 print:text-slate-600">
+                  Total Pengeluaran
                 </span>
-                <span className="text-sm sm:text-base font-bold font-mono text-rose-400 print:text-rose-600 block truncate">
+                <span className="text-[16px] font-semibold font-mono text-rose-400 print:text-rose-600 block truncate">
                   -{formatRupiah(totalExpense)}
                 </span>
               </div>
@@ -460,7 +460,7 @@ export default function LaporanPage() {
             {/* Header Chart & Legenda */}
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-xs sm:text-sm font-bold text-white print:text-slate-900">
+                <h2 className="text-[14px] sm:text-sm font-bold text-white print:text-slate-900">
                   Tren Arus Kas
                 </h2>
                 <p className="text-[10px] text-slate-400 print:text-slate-500">
@@ -541,13 +541,13 @@ export default function LaporanPage() {
 
           {/* 3. POS PENGELUARAN TERBESAR PER KATEGORI */}
           <div className="p-4 sm:p-5 rounded-3xl bg-white/[0.02] border border-white/[0.06] backdrop-blur-md print:border-slate-300">
-            <h2 className="text-xs sm:text-sm font-bold text-white mb-3 print:text-slate-900">
+            <h2 className="text-[16px] font-semibold text-white mb-3 print:text-slate-900">
               Pos Pengeluaran Terbesar
             </h2>
 
             {topExpenseCategories.length === 0 ? (
-              <p className="text-xs text-slate-500 italic py-2">
-                Tidak ada pengeluaran tercatat pada periode ini.
+              <p className="text-[14px] text-slate-500 py-2">
+                Belum ada transaksi di periode ini.
               </p>
             ) : (
               <div className="space-y-3.5">
@@ -581,16 +581,16 @@ export default function LaporanPage() {
           </div>
 
           {/* 4. DUA TOMBOL AKSI EKSPOR: PDF SIAP CETAK & CSV EXCEL */}
-          <div className="space-y-2.5 pt-2 print:hidden">
+          <div className="space-y-3 pt-2 print:hidden">
             {/* Tombol PDF Siap Cetak */}
             <button
               type="button"
               onClick={handlePrintPdf}
               disabled={isPrinting}
-              className="w-full h-12 rounded-2xl bg-gradient-to-r from-solar-500 to-solar-600 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,137,24,0.3)] active:scale-[0.98] transition-all disabled:opacity-50"
+              className="w-full h-[48px] rounded-2xl bg-emerald-500 text-white font-bold text-[14px] flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.3)] active:scale-[0.98] transition-all disabled:opacity-50"
             >
-              <Printer className="w-4 h-4" />
-              <span>{isPrinting ? "Menyiapkan Dokumen..." : "Unduh Laporan PDF (Siap Cetak)"}</span>
+              <FileText className="w-5 h-5" />
+              <span>{isPrinting ? "Menyiapkan PDF..." : "Unduh Laporan PDF (Siap Cetak)"}</span>
             </button>
 
             {/* Tombol Ekspor CSV Excel */}
@@ -598,9 +598,9 @@ export default function LaporanPage() {
               type="button"
               onClick={handleExportCsv}
               disabled={isExportingCsv}
-              className="w-full h-12 rounded-2xl border border-white/[0.1] bg-white/[0.02] text-slate-300 hover:text-white font-semibold text-xs flex items-center justify-center gap-2 active:scale-[0.98] transition-all disabled:opacity-50"
+              className="w-full h-[48px] rounded-2xl border border-white/[0.1] bg-transparent text-[14px] text-slate-300 hover:text-white font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-all disabled:opacity-50"
             >
-              <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+              <FileSpreadsheet className="w-5 h-5 text-emerald-400" />
               <span>{isExportingCsv ? "Mengekspor..." : "Ekspor Data Lengkap (Excel / CSV)"}</span>
             </button>
           </div>

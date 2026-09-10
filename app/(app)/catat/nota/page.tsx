@@ -150,7 +150,7 @@ export default function CatatNotaPage() {
       />
 
       {/* Header */}
-      <div className="relative z-10 flex items-center justify-between mb-5">
+      <div className="relative z-10 flex items-center justify-between mb-5 mt-2">
         <button
           type="button"
           onClick={() => router.push("/dashboard")}
@@ -158,19 +158,18 @@ export default function CatatNotaPage() {
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-base font-semibold text-white">Pindai Nota Belanja</h1>
+        <h1 className="text-[18px] font-bold text-white">Pindai Nota Belanja</h1>
         <div className="w-10" />
       </div>
 
       {/* Tips Panduan Foto */}
-      <div className="relative z-10 p-4 rounded-3xl border border-solar-500/20 bg-solar-500/[0.04] backdrop-blur-md mb-5">
-        <div className="flex items-center gap-2 text-xs font-semibold text-solar-400 mb-1.5">
-          <Sparkles className="w-4 h-4 text-solar-500" />
-          <span>Tips Foto Agar Terbaca Jelas:</span>
+      <div className="relative z-10 p-3 rounded-[12px] border border-solar-500/20 bg-solar-500/[0.04] backdrop-blur-md mb-4">
+        <div className="flex items-start gap-2">
+          <span className="text-[16px] leading-none mt-0.5">💡</span>
+          <p className="text-[13px] text-slate-300/90 leading-relaxed">
+            Pastikan nota rata, pencahayaan cukup, dan angka total terlihat jelas. Hindari foto blur atau terlipat.
+          </p>
         </div>
-        <p className="text-[12.5px] text-slate-300/90 leading-relaxed">
-          Ratakan nota fisik, pastikan pencahayaan terang tanpa bayangan gelap, dan angka total terlihat tajam.
-        </p>
       </div>
 
       {/* Viewfinder Nota (Area Utama) */}
@@ -277,10 +276,9 @@ export default function CatatNotaPage() {
         <button
           type="button"
           onClick={() => router.push("/catat/manual")}
-          className="w-full flex items-center justify-center gap-2 text-xs text-slate-400 hover:text-white transition-colors pt-2"
+          className="w-full flex items-center justify-center gap-2 text-[14px] text-slate-300 hover:text-white transition-colors pt-2"
         >
-          <Keyboard className="w-3.5 h-3.5 text-slate-400" />
-          <span>Nota sobek atau tidak terbaca? <strong className="text-solar-400 underline font-semibold">Ketik Manual Saja</strong></span>
+          <span>Nota sobek atau tidak terbaca? <strong className="text-emerald-400 underline font-bold">Ketik Manual Saja</strong></span>
         </button>
       </div>
 

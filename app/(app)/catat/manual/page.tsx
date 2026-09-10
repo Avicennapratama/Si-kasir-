@@ -154,15 +154,15 @@ export default function CatatManualPage() {
 
       {/* Top Bar Header */}
       <div className="relative z-10">
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center justify-between mb-5 mt-2">
           <button
             type="button"
             onClick={() => router.back()}
-            className="w-10 h-10 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-slate-300 hover:text-white active:scale-95 transition-all"
+            className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-slate-300 hover:text-white active:scale-95 transition-all"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-base font-semibold text-white">Catat Manual</h1>
+          <h1 className="text-lg font-bold text-white tracking-wide">Catat Manual</h1>
           <div className="w-10" /> {/* Spacer seimbang */}
         </div>
 
@@ -171,37 +171,34 @@ export default function CatatManualPage() {
           <button
             type="button"
             onClick={() => handleTypeChange("income")}
-            className={`h-11 rounded-xl font-semibold text-xs flex items-center justify-center gap-1.5 transition-all ${
+            className={`h-12 rounded-xl font-bold text-[13px] flex items-center justify-center gap-1.5 transition-all ${
               type === "income"
-                ? "bg-emerald-500 text-slate-950 shadow-[0_0_15px_rgba(16,185,129,0.35)]"
+                ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
                 : "text-slate-400 hover:text-white"
             }`}
           >
             <ArrowDownLeft className="w-4 h-4" />
-            <span>Uang Masuk (+)</span>
+            <span>+ Uang Masuk</span>
           </button>
 
           <button
             type="button"
             onClick={() => handleTypeChange("expense")}
-            className={`h-11 rounded-xl font-semibold text-xs flex items-center justify-center gap-1.5 transition-all ${
+            className={`h-12 rounded-xl font-bold text-[13px] flex items-center justify-center gap-1.5 transition-all ${
               type === "expense"
-                ? "bg-rose-500 text-white shadow-[0_0_15px_rgba(244,63,94,0.35)]"
+                ? "bg-rose-500/10 border border-rose-500/20 text-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.15)]"
                 : "text-slate-400 hover:text-white"
             }`}
           >
             <ArrowUpRight className="w-4 h-4" />
-            <span>Uang Keluar (-)</span>
+            <span>- Uang Keluar</span>
           </button>
         </div>
 
         {/* Display Nominal Raksasa di Tengah */}
-        <div className="p-6 rounded-3xl border border-white/[0.08] bg-white/[0.02] backdrop-blur-md text-center mb-4">
-          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-            Nominal Transaksi
-          </span>
-          <div className="mt-2 flex items-center justify-center gap-1 font-mono font-bold tracking-tight">
-            <span className="text-xl text-slate-500 font-sans">Rp</span>
+        <div className="py-6 px-4 rounded-2xl border border-white/[0.08] bg-white/[0.02] backdrop-blur-md text-center mb-5">
+          <div className="mt-1 flex items-center justify-center gap-1.5 font-mono font-bold tracking-tight">
+            <span className="text-[20px] text-slate-500 font-sans">Rp</span>
             <input
               type="text"
               inputMode="numeric"
@@ -209,22 +206,22 @@ export default function CatatManualPage() {
               value={rawAmount ? formattedDisplay : ""}
               onChange={handleAmountChange}
               placeholder="0"
-              className={`w-full text-center bg-transparent focus:outline-none text-4xl font-bold font-mono ${
+              className={`w-full text-center bg-transparent focus:outline-none text-[36px] font-bold font-mono ${
                 type === "income" ? "text-emerald-400" : "text-rose-400"
               } placeholder-slate-600`}
             />
           </div>
 
           {/* Quick Add Chips (+10rb, +20rb, +50rb, +100rb) */}
-          <div className="flex items-center justify-center gap-2 mt-4 pt-4 border-t border-white/[0.06] flex-wrap">
+          <div className="flex items-center justify-center gap-2 mt-5 flex-wrap">
             {[10000, 20000, 50000, 100000].map((val) => (
               <button
                 type="button"
                 key={val}
                 onClick={() => addAmount(val)}
-                className="px-3 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] text-xs font-mono text-slate-300 hover:border-white/20 active:scale-95 transition-all"
+                className="px-3.5 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] text-[12px] font-mono text-slate-300 hover:border-white/20 hover:bg-white/[0.08] active:scale-95 transition-all"
               >
-                +{val / 1000}rb
+                +{val.toLocaleString("id-ID")}
               </button>
             ))}
           </div>

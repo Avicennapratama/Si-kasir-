@@ -329,276 +329,150 @@ export default function PengaturanPage() {
           <ArrowLeft className="w-5 h-5" />
         </button>
 
-        <div className="text-center">
-          <h1 className="text-sm font-bold text-white tracking-tight">Pengaturan &amp; Akun</h1>
-          <p className="text-[10px] text-slate-400 font-mono">Pusat Kendali &amp; Privasi Data</p>
-        </div>
+        <h1 className="text-[20px] font-bold text-white tracking-tight">Pengaturan Aplikasi</h1>
 
         <div className="w-10 h-10 flex items-center justify-center">
           <Settings className="w-5 h-5 text-slate-500" />
         </div>
       </div>
 
-      <div className="space-y-5 relative z-10">
+      <div className="space-y-6 relative z-10">
         {/* ============================================================ */}
-        {/* SECTION 1: PROFIL PENGGUNA & TOKO                            */}
+        {/* SECTION 1: PROFIL USAHA                                      */}
         {/* ============================================================ */}
-        <section className="p-4 rounded-3xl bg-white/[0.03] border border-white/[0.08] backdrop-blur-md">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-              <User className="w-3.5 h-3.5 text-primary-400" />
-              <span>Profil Pengguna &amp; Usaha</span>
-            </span>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => router.push("/pengaturan/profil")}
-                className="text-[11px] font-semibold text-cyan-400 hover:text-cyan-300 transition-colors"
-              >
-                Akun
-              </button>
-              <span className="text-slate-600">·</span>
-              <button
-                type="button"
-                onClick={() => router.push("/pengaturan/usaha")}
-                className="text-[11px] font-semibold text-primary-400 hover:text-primary-300 transition-colors"
-              >
-                Toko
-              </button>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3.5 pt-1">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-500 to-amber-600 flex items-center justify-center text-slate-950 font-black text-base shadow-[0_0_15px_rgba(255,137,24,0.3)] shrink-0">
-              {business?.name ? business.name.slice(0, 2).toUpperCase() : user?.email?.slice(0, 2).toUpperCase() || "SK"}
+        <section>
+          <h2 className="text-[12px] font-semibold text-slate-400 mb-3 pl-1 tracking-wider">PROFIL USAHA</h2>
+          <button
+            type="button"
+            onClick={() => router.push("/pengaturan/usaha")}
+            className="w-full h-[72px] px-4 rounded-[14px] bg-white/[0.03] border border-white/[0.08] flex items-center gap-4 active:scale-[0.98] transition-all text-left"
+          >
+            <div className="w-[44px] h-[44px] rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-[16px] shadow-sm shrink-0">
+              {business?.name ? business.name.slice(0, 2).toUpperCase() : "SK"}
             </div>
             <div className="flex-1 min-w-0">
-              <h2 className="text-sm font-bold text-white truncate">
-                {business?.name || "Toko Belum Dinamai"}
-              </h2>
-              <p className="text-[11px] text-slate-400 truncate">
-                {user?.email || "Mode Tamu (Offline)"}
+              <h3 className="text-[16px] font-semibold text-white truncate">
+                {business?.name || "Warung Berkah Bu Siti"}
+              </h3>
+              <p className="text-[12px] text-slate-400 truncate mt-0.5">
+                {business?.category || "Kuliner & Minuman"}
               </p>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/[0.05] border border-white/[0.08] text-[10px] font-mono text-slate-300">
-                  <Store className="w-3 h-3 text-primary-400" />
-                  <span>{business?.category || "Umum"}</span>
-                </span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" />
+          </button>
+        </section>
+
+        {/* ============================================================ */}
+        {/* SECTION 2: SINKRONISASI OFFLINE                             */}
+        {/* ============================================================ */}
+        <section>
+          <h2 className="text-[12px] font-semibold text-slate-400 mb-3 pl-1 tracking-wider">STATUS PENYIMPANAN OFFLINE</h2>
+          <div className="p-4 rounded-[14px] bg-white/[0.03] border border-white/[0.08]">
+            <div className="flex items-start gap-3">
+              <div className="mt-1">
+                {outboxCount === 0 ? (
+                  <span className="text-emerald-400 text-lg">☁️✓</span>
+                ) : (
+                  <span className="text-amber-400 text-lg">☁️⚠️</span>
+                )}
+              </div>
+              <div className="flex-1">
+                {outboxCount === 0 ? (
+                  <>
+                    <h3 className="text-[14px] font-medium text-white mb-1">Semua data kas tersinkronisasi ke cloud</h3>
+                    <p className="text-[12px] text-slate-500">Terakhir disinkron: Baru saja</p>
+                  </>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-[14px] font-semibold text-amber-400">{outboxCount} transaksi tersimpan lokal di HP</h3>
+                    <button
+                      onClick={handleSyncOutbox}
+                      disabled={isSyncing}
+                      className="px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-[12px] font-semibold text-amber-400 active:scale-95 transition-all"
+                    >
+                      {isSyncing ? "Menyinkron..." : "Sinkronkan Sekarang"}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </section>
 
         {/* ============================================================ */}
-        {/* SECTION 2: SINKRONISASI OFFLINE & OUTBOX                    */}
+        {/* SECTION 3: KENDALI PRIVASI & DATA                            */}
         {/* ============================================================ */}
-        <section className="p-4 rounded-3xl bg-white/[0.03] border border-white/[0.08] backdrop-blur-md">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-              <Database className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Penyimpanan &amp; Sinkronisasi</span>
-            </span>
-            <div className="flex items-center gap-1.5">
-              {isOnline ? (
-                <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-400">
-                  <Wifi className="w-3 h-3" />
-                  <span>Online</span>
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-400">
-                  <WifiOff className="w-3 h-3" />
-                  <span>Offline</span>
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div className="p-3.5 rounded-2xl bg-black/40 border border-white/[0.06] mb-3 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold text-slate-200">Antrian Outbox Lokal</p>
-              <p className="text-[11px] text-slate-400 font-mono">
-                {outboxCount > 0 ? `${outboxCount} transaksi menunggu upload` : "Semua data aman tersimpan di cloud"}
-              </p>
-            </div>
-            <span
-              className={`text-xs font-mono font-bold px-2.5 py-1 rounded-xl ${
-                outboxCount > 0
-                  ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
-                  : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
-              }`}
-            >
-              {outboxCount} Item
-            </span>
-          </div>
-
-          {syncFeedback && (
-            <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs flex items-center gap-2 mb-3">
-              <Sparkles className="w-4 h-4 shrink-0" />
-              <span>{syncFeedback}</span>
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-2">
+        <section>
+          <h2 className="text-[12px] font-semibold text-slate-400 mb-3 pl-1 tracking-wider">KENDALI PRIVASI & DATA</h2>
+          <div className="rounded-[14px] bg-white/[0.03] border border-white/[0.08] overflow-hidden">
+            {/* Item A */}
             <button
-              type="button"
-              onClick={handleSyncOutbox}
-              disabled={isSyncing}
-              className="h-11 px-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] hover:border-cyan-500/40 text-xs font-semibold text-slate-200 hover:text-cyan-300 active:scale-95 transition-all flex items-center justify-center gap-2"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin text-cyan-400" : ""}`} />
-              <span>{isSyncing ? "Sinkronisasi..." : "Sinkronkan"}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleClearCache}
-              className="h-11 px-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] hover:border-amber-500/40 text-xs font-semibold text-slate-200 hover:text-amber-300 active:scale-95 transition-all flex items-center justify-center gap-2"
-            >
-              {cacheCleared ? (
-                <>
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="text-emerald-400">Bersih!</span>
-                </>
-              ) : (
-                <>
-                  <Trash2 className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Bersih Cache AI</span>
-                </>
-              )}
-            </button>
-          </div>
-        </section>
-
-        {/* ============================================================ */}
-        {/* SECTION 3: CADANGKAN & EKSPOR DATA                           */}
-        {/* ============================================================ */}
-        <section className="p-4 rounded-3xl bg-white/[0.03] border border-white/[0.08] backdrop-blur-md">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-              <Download className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Ekspor &amp; Backup Data</span>
-            </span>
-            <button
-              type="button"
-              onClick={() => router.push("/pengaturan/data")}
-              className="text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 transition-colors"
-            >
-              Kelola Data
-            </button>
-          </div>
-
-          <p className="text-[11px] text-slate-400 mb-3 leading-relaxed">
-            Unduh salinan transaksi toko Anda ke dalam memori perangkat. Data sepenuhnya milik Anda.
-          </p>
-
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => handleExportData("csv")}
-              disabled={isExporting}
-              className="h-11 px-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] hover:border-emerald-500/40 text-xs font-semibold text-slate-200 hover:text-emerald-400 active:scale-95 transition-all flex items-center justify-center gap-2"
-            >
-              <FileText className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Ekspor CSV (Excel)</span>
-            </button>
-
-            <button
-              type="button"
               onClick={() => handleExportData("json")}
               disabled={isExporting}
-              className="h-11 px-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] hover:border-purple-500/40 text-xs font-semibold text-slate-200 hover:text-purple-400 active:scale-95 transition-all flex items-center justify-center gap-2"
+              className="w-full p-4 flex items-start gap-3 text-left hover:bg-white/[0.02] active:bg-white/[0.05] transition-colors border-b border-white/[0.08]"
             >
-              <Database className="w-3.5 h-3.5 text-purple-400" />
-              <span>Backup JSON</span>
-            </button>
-          </div>
-        </section>
-
-        {/* ============================================================ */}
-        {/* SECTION 4: TENTANG & KEBIJAKAN PRIVASI                       */}
-        {/* ============================================================ */}
-        <section className="p-4 rounded-3xl bg-white/[0.03] border border-white/[0.08] backdrop-blur-md space-y-1">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
-              <span>Privasi &amp; Ketentuan</span>
-            </span>
-            <button
-              type="button"
-              onClick={() => router.push("/pengaturan/privasi")}
-              className="text-[11px] font-semibold text-blue-400 hover:text-blue-300 transition-colors"
-            >
-              Kendali AI
-            </button>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => router.push("/pengaturan/privasi")}
-            className="w-full py-2.5 flex items-center justify-between text-xs text-slate-300 hover:text-white group transition-colors"
-          >
-            <span>Izin &amp; Kendali Privasi AI</span>
-            <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-slate-300 transition-colors" />
-          </button>
-
-          <div className="h-px bg-white/[0.06]" />
-
-          <button
-            type="button"
-            onClick={() => router.push("/legal/privasi")}
-            className="w-full py-2.5 flex items-center justify-between text-xs text-slate-300 hover:text-white group transition-colors"
-          >
-            <span>Kebijakan Privasi (UU PDP)</span>
-            <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-slate-300 transition-colors" />
-          </button>
-
-          <div className="h-px bg-white/[0.06]" />
-
-          <button
-            type="button"
-            onClick={() => router.push("/legal/syarat")}
-            className="w-full py-2.5 flex items-center justify-between text-xs text-slate-300 hover:text-white group transition-colors"
-          >
-            <span>Syarat &amp; Ketentuan Layanan</span>
-            <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-slate-300 transition-colors" />
-          </button>
-
-          <div className="h-px bg-white/[0.06]" />
-
-          <div className="w-full py-2.5 flex items-center justify-between text-xs text-slate-400 font-mono">
-            <span>Versi Aplikasi PWA</span>
-            <span className="px-2 py-0.5 rounded-full bg-white/[0.04] text-[10px]">v1.0.0 (Production)</span>
-          </div>
-        </section>
-
-        {/* ============================================================ */}
-        {/* SECTION 5: DANGER ZONE                                       */}
-        {/* ============================================================ */}
-        <section className="p-4 rounded-3xl bg-rose-500/[0.03] border border-rose-500/20 backdrop-blur-md space-y-2.5">
-          <span className="text-[11px] font-bold text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
-            <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
-            <span>Zona Akun</span>
-          </span>
-
-          <div className="grid grid-cols-2 gap-2 pt-1">
-            <button
-              type="button"
-              onClick={() => setShowLogoutModal(true)}
-              className="h-11 px-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] hover:border-slate-500 text-xs font-semibold text-slate-300 hover:text-white active:scale-95 transition-all flex items-center justify-center gap-2"
-            >
-              <LogOut className="w-3.5 h-3.5 text-slate-400" />
-              <span>Keluar Akun</span>
+              <Download className="w-5 h-5 text-slate-300 shrink-0 mt-0.5" />
+              <div>
+                <h3 className="text-[14px] font-medium text-white mb-1">Unduh Seluruh Data Saya</h3>
+                <p className="text-[12px] text-slate-500 leading-snug">Ekspor seluruh transaksi, profil, dan aset ke format JSON & Excel</p>
+              </div>
             </button>
 
+            {/* Item B */}
             <button
-              type="button"
+              onClick={handleClearCache}
+              className="w-full p-4 flex items-start gap-3 text-left hover:bg-white/[0.02] active:bg-white/[0.05] transition-colors border-b border-white/[0.08]"
+            >
+              <Trash2 className="w-5 h-5 text-slate-300 shrink-0 mt-0.5" />
+              <div>
+                <h3 className="text-[14px] font-medium text-white mb-1">Hapus Riwayat Pencatatan AI</h3>
+                <p className="text-[12px] text-slate-500 leading-snug">Hapus log suara & foto nota sementara tanpa menghapus transaksi resmi</p>
+              </div>
+            </button>
+
+            {/* Item C */}
+            <button
               onClick={() => setShowDeleteAccountModal(true)}
-              className="h-11 px-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20 text-xs font-semibold text-rose-400 active:scale-95 transition-all flex items-center justify-center gap-2"
+              className="w-full p-4 flex items-start gap-3 text-left hover:bg-rose-500/10 active:bg-rose-500/20 transition-colors"
             >
-              <Trash2 className="w-3.5 h-3.5 text-rose-400" />
-              <span>Hapus Akun</span>
+              <Trash2 className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+              <div>
+                <h3 className="text-[14px] font-medium text-rose-500 mb-1">Hapus Akun & Semua Data Permanen</h3>
+                <p className="text-[12px] text-slate-500 leading-snug">Tindakan ini tidak dapat dibatalkan. Seluruh data kas Anda akan dihapus total dari server.</p>
+              </div>
             </button>
           </div>
+        </section>
+
+        {/* ============================================================ */}
+        {/* SECTION 4: TENTANG APLIKASI                                  */}
+        {/* ============================================================ */}
+        <section>
+          <h2 className="text-[12px] font-semibold text-slate-400 mb-3 pl-1 tracking-wider">TENTANG</h2>
+          <div className="p-4 rounded-[14px] bg-white/[0.03] border border-white/[0.08] space-y-4">
+            <p className="text-[14px] text-white font-medium">SiKasir AI v1.0.0 (Progressive Web App)</p>
+            <div className="space-y-3">
+              <button onClick={() => router.push("/legal/syarat")} className="block text-[14px] text-cyan-400 hover:text-cyan-300 transition-colors">
+                Syarat & Ketentuan Layanan
+              </button>
+              <button onClick={() => router.push("/legal/privasi")} className="block text-[14px] text-cyan-400 hover:text-cyan-300 transition-colors">
+                Kebijakan Privasi
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* ============================================================ */}
+        {/* LOGOUT BUTTON                                                */}
+        {/* ============================================================ */}
+        <section className="pt-2 pb-6">
+          <button
+            onClick={() => setShowLogoutModal(true)}
+            className="w-full h-[48px] rounded-[12px] bg-transparent border border-rose-500 text-[16px] font-semibold text-rose-500 flex items-center justify-center gap-2 hover:bg-rose-500/10 active:scale-[0.98] transition-all"
+          >
+            <LogOut className="w-5 h-5" />
+            <span>Keluar dari Akun</span>
+          </button>
         </section>
       </div>
 

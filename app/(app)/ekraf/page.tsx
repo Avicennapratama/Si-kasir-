@@ -121,56 +121,44 @@ export default function EkrafHubPage() {
         <ChevronRight className="w-4 h-4 text-slate-500 shrink-0" />
       </div>
 
-      {/* Grid 4 Kartu Layanan Ekraf */}
-      <div className="space-y-3.5">
+      {/* Grid 4 Kartu Layanan Ekraf (2x2) */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
         {services.map((item) => {
           const Icon = item.icon;
           return (
             <div
               key={item.id}
               onClick={() => router.push(item.route)}
-              className="group p-4 rounded-3xl bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.15] active:scale-[0.99] transition-all cursor-pointer relative overflow-hidden backdrop-blur-md"
+              className="group p-3 rounded-3xl bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.15] active:scale-[0.97] transition-all cursor-pointer relative overflow-hidden backdrop-blur-md flex flex-col h-full"
             >
               {/* Subtle card glow */}
               <div
                 className={`absolute top-0 right-0 w-24 h-24 rounded-full blur-[40px] pointer-events-none opacity-0 group-hover:opacity-20 transition-opacity bg-gradient-to-bl ${item.glowColor}`}
               />
 
-              <div className="flex items-start gap-3.5 relative z-10">
-                {/* Icon Box */}
-                <div
-                  className={`w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${item.accentIconBg}`}
-                >
-                  <Icon className="w-6 h-6" />
-                </div>
-
-                {/* Text Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <h2 className="text-sm font-bold text-white group-hover:text-orange-400 transition-colors">
-                      {item.title}
-                    </h2>
-                    <span
-                      className={`text-[9px] font-semibold px-2 py-0.5 rounded-full border whitespace-nowrap ${item.badgeColor}`}
-                    >
-                      {item.badge}
-                    </span>
+              <div className="relative z-10 flex flex-col h-full">
+                {/* Header Kartu: Icon & Title */}
+                <div className="flex flex-col gap-2 mb-2">
+                  <div
+                    className={`w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${item.accentIconBg}`}
+                  >
+                    <Icon className="w-6 h-6" />
                   </div>
-
-                  <p className="text-xs text-slate-300 font-medium mb-1">
-                    {item.subtitle}
-                  </p>
-
-                  <p className="text-[11px] text-slate-400 leading-relaxed line-clamp-2">
-                    {item.description}
-                  </p>
+                  <h2 className="text-[14px] font-bold text-white group-hover:text-orange-400 transition-colors leading-tight">
+                    {item.title}
+                  </h2>
                 </div>
-              </div>
 
-              {/* Bottom Action Hint */}
-              <div className="mt-3 pt-2.5 border-t border-white/[0.04] flex items-center justify-between text-[11px] text-slate-400 group-hover:text-slate-200">
-                <span>Buka Layanan</span>
-                <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1 text-orange-400" />
+                {/* Deskripsi */}
+                <p className="text-[11px] text-slate-400 leading-relaxed mb-auto">
+                  {item.description}
+                </p>
+
+                {/* Bottom Action Hint */}
+                <div className="mt-3 pt-2.5 border-t border-white/[0.04] flex items-center justify-between text-[10px] font-semibold text-slate-400 group-hover:text-orange-400 transition-colors">
+                  <span>Buka</span>
+                  <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                </div>
               </div>
             </div>
           );
