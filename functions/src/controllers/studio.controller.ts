@@ -4,6 +4,9 @@
 
 import { Request, Response } from 'express';
 import { db } from '../config/firebase.js';
+import { v4 as uuidv4 } from 'uuid';
+import { generateProductCaptions } from '../ai/captionGenerator.js';
+import { enhanceImageForMarketplace } from '../ai/imageEnhancer.js';
 
 export const aiStudioEnhanceImage = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -22,16 +25,16 @@ export const aiStudioEnhanceImage = async (req: Request, res: Response): Promise
       return;
     }
 
-    // Mock image enhancement
-    const mockResponse = {
-      studioAssetId: 'studio_' + Date.now(),
-      originalMediaAssetId: 'media_' + Date.now(),
-      resultMediaAssetId: 'media_' + (Date.now() + 1),
+    // Call image enhancer logic
+    const enhanced = await enhanceImageForMarketplace(image);
+    
+    const responseData = {
+      studioAssetId: 'studio_' + uuidv4(),
+      ...enhanced,
       status: 'completed',
-      resultUrl: 'https://example.com/enhanced_' + Date.now() + '.jpg',
     };
 
-    res.json({ success: true, data: mockResponse });
+    res.json({ success: true, data: responseData });
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }
@@ -54,18 +57,20 @@ export const aiStudioGenerateCaption = async (req: Request, res: Response): Prom
       return;
     }
 
-    // Mock caption generation
-    const mockCaptions = [
-      `Dapatkan ${productName} kualitas terbaik untuk kebutuhan Anda! Hubungi kami sekarang untuk promo spesial.`,
-      `Mau ${productName} yang terpercaya? Kami siap melayani dengan sepenuh hati. Pesan sekarang sebelum kehabisan!`,
-      `Hadirkan ${productName} pilihan untuk melengkapi harimu. Yuk langsung chat kami sekarang!`,
-    ];
+    // Call real caption generator
+    const { captions } = await generateProductCaptions({
+      productName,
+      category,
+      tone: tone || 'ramah',
+      platform: platform || 'instagram',
+      keywords: []
+    });
 
     res.json({
       success: true,
       data: {
-        captions: mockCaptions,
-        hashtags: ['#umkm', '#bisnisindonesia', '#sikasir'],
+        captions: captions,
+        hashtags: ['#umkm', '#bisnisindonesia', '#sikasir', `#${category.replace(/\s+/g, '')}`],
       },
     });
   } catch (err) {

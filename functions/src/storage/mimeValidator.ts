@@ -2,7 +2,7 @@
  * MIME type validation for uploads
  */
 
-import { SUPPORTED_IMAGE_MIME_TYPES } from '../config/gemini.js';
+import { SUPPORTED_IMAGE_MIME_TYPES } from '../ai/geminiClient.js';
 
 export const ALLOWED_MIME_TYPES = [
   ...SUPPORTED_IMAGE_MIME_TYPES,

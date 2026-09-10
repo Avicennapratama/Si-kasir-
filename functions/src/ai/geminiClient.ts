@@ -65,19 +65,29 @@ function parseJsonFromModel<T>(raw: string): T {
 }
 
 export class GeminiClient {
-  private apiKey: string;
+  private apiKeys: string[];
+  private currentKeyIndex = 0;
 
   constructor(apiKey?: string) {
-    this.apiKey = apiKey || GEMINI_API_KEY || process.env.GEMINI_API_KEY || '';
+    const rawKeys = apiKey || GEMINI_API_KEY || process.env.GEMINI_API_KEY || '';
+    this.apiKeys = rawKeys.split(',').map(k => k.trim()).filter(Boolean);
   }
 
   get isConfigured(): boolean {
-    return Boolean(this.apiKey);
+    return this.apiKeys.length > 0;
+  }
+
+  private getNextKey(): string {
+    if (this.apiKeys.length === 0) return '';
+    const key = this.apiKeys[this.currentKeyIndex];
+    this.currentKeyIndex = (this.currentKeyIndex + 1) % this.apiKeys.length;
+    return key;
   }
 
   /** Panggilan mentah ke Gemini. `parts` mengikuti format Generative Language API. */
   private async call(parts: unknown[], maxTokens = GEMINI_MAX_TOKENS): Promise<string> {
-    const res = await fetch(`${ENDPOINT}?key=${this.apiKey}`, {
+    const key = this.getNextKey();
+    const res = await fetch(`${ENDPOINT}?key=${key}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -104,7 +114,8 @@ export class GeminiClient {
   /** Prompt bebas, balasan teks biasa (dipakai asisten chat). */
   async generateText(prompt: string, maxTokens = GEMINI_MAX_TOKENS): Promise<string> {
     if (!this.isConfigured) throw new Error('GEMINI_API_KEY not configured');
-    const res = await fetch(`${ENDPOINT}?key=${this.apiKey}`, {
+    const key = this.getNextKey();
+    const res = await fetch(`${ENDPOINT}?key=${key}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
