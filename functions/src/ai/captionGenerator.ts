@@ -31,7 +31,13 @@ function captionsFromRaw(raw: string): string[] {
   } catch {
     /* fallthrough */
   }
-  return text.split('\n').map((l) => l.replace(/^[-*\d.)\s]+/, '').trim()).filter(Boolean);
+  // Fallback: pecah per baris, tapi buang sisa-sisa sintaks JSON supaya
+  // caption tidak menampilkan "```json" / "{" / "\"captions\": [" ke user.
+  return text
+    .split('\n')
+    .map((l) => l.replace(/^[-\*\d.)\s]+/, '').trim())
+    .map((l) => l.replace(/^["']|["'],?$/g, '').trim())
+    .filter((l) => l && !/^[\[\]{}`,:]+$/.test(l) && !/^"?captions"?\s*:?$/.test(l));
 }
 
 export const generateProductCaptions = async (input: CaptionInput): Promise<CaptionOutput> => {
@@ -57,7 +63,7 @@ export const generateProductCaptions = async (input: CaptionInput): Promise<Capt
     input.keywords?.length ? `- Kata kunci: ${input.keywords.join(', ')}` : '',
   ].filter(Boolean).join('\n');
 
-  const raw = await client.generateText(prompt, 400);
+  const raw = await client.generateJson(prompt, 1200);
   const list = captionsFromRaw(raw);
 
   while (list.length < 3) list.push(list[list.length - 1] ?? `Cek ${input.productName} sekarang!`);

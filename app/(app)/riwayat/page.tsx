@@ -423,7 +423,7 @@ export default function RiwayatPage() {
   const hasOutboxItems = transactions.some((t) => t.isOffline);
 
   return (
-    <main className="min-h-screen bg-[#090A0F] text-slate-100 px-4 sm:px-5 pt-5 pb-28 max-w-md mx-auto relative overflow-hidden">
+    <main className="min-h-screen bg-[#090A0F] text-slate-100 px-4 sm:px-5 pt-5 pb-28 w-full relative overflow-hidden">
       {/* Background Ambient Flare */}
       <div
         className="absolute top-[-60px] right-[-40px] w-[260px] h-[260px] rounded-full pointer-events-none blur-[110px] opacity-15"
@@ -523,7 +523,7 @@ export default function RiwayatPage() {
 
       {/* Filter Tabs (Jenis) */}
       <div className="flex gap-2 mb-3">
-        <div className="flex-1 grid grid-cols-3 gap-1 p-1 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+        <div className="flex-1 grid grid-cols-3 gap-1 p-1 rounded-2xl bg-white/[0.03] border border-white/[0.06] max-w-md">
           <button
             type="button"
             onClick={() => setTypeFilter("all")}
@@ -774,7 +774,7 @@ export default function RiwayatPage() {
       {/* ========================================================================= */}
       {selectedTx && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="w-full max-w-md bg-[#0D0E14] border-t sm:border border-white/[0.1] rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-5">
+          <div className="w-full max-w-md sm:max-w-xl bg-[#0D0E14] border-t sm:border border-white/[0.1] rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-5">
             {/* Header Modal */}
             <div className="flex items-center justify-between border-b border-white/[0.08] pb-3 mb-4">
               <h2 className="text-sm font-bold text-white">
@@ -911,7 +911,7 @@ export default function RiwayatPage() {
                   <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
                     Jenis
                   </label>
-                  <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+                  <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-white/[0.03] border border-white/[0.06] max-w-sm">
                     <button
                       type="button"
                       onClick={() =>

@@ -24,3 +24,6 @@ tsconfig.tsbuildinfo
 # Logs
 *.log
 npm-debug.log*
+
+# Build artifact untuk benchmark parser (dibuat otomatis)
+functions/scripts/_bench/

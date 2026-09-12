@@ -91,7 +91,7 @@ export function VoiceRecorder({ onDraftReady }: { onDraftReady: (draft: any) => 
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
   return (
-    <div className="p-4 space-y-6 max-w-md mx-auto">
+    <div className="p-4 space-y-6 w-full">
       <div className="flex items-center gap-3">
         <button onClick={() => router.back()} className="p-2 -ml-2 rounded-full hover:bg-slate-100">
           <ArrowLeft className="w-5 h-5 text-slate-700" />

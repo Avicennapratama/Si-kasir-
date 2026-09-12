@@ -9,6 +9,7 @@ import type * as adminTypes from 'firebase-admin';
 const admin = adminSdk;
 import * as functions from 'firebase-functions';
 import { Request, Response, NextFunction } from 'express';
+import { NODE_ENV, FIREBASE_PROJECT_ID } from '../config/env.js';
 
 /**
  * Verify Firebase Auth ID token from request headers.
@@ -46,6 +47,19 @@ export async function verifyAuthHeader(
 }
 
 async function verifyToken(headers: Record<string, any>): Promise<adminTypes.auth.DecodedIdToken> {
+  // DEV-ONLY bypass: dev-server lokal (scripts/dev-server.mjs) tidak punya
+  // credential Admin untuk mint ID token, jadi pengujian end-to-end pakai
+  // header x-dev-uid. Di production NODE_ENV=production -> jalur ini mati
+  // total dan token asli tetap wajib.
+  if (NODE_ENV !== 'production' && headers['x-dev-uid']) {
+    return {
+      uid: String(headers['x-dev-uid']),
+      sub: String(headers['x-dev-uid']),
+      aud: FIREBASE_PROJECT_ID,
+      firebase: { sign_in_provider: 'dev-bypass' },
+    } as unknown as adminTypes.auth.DecodedIdToken;
+  }
+
   const authHeader = headers.authorization || headers.Authorization || '';
   if (!authHeader.startsWith('Bearer ')) {
     throw new functions.https.HttpsError('unauthenticated', 'No Bearer token provided');

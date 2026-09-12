@@ -14,6 +14,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { compressImage } from "@/lib/utils/image-compression";
+import { processReceiptImage } from "@/lib/api/receipt.api";
 
 type ScanState = "idle" | "selected" | "uploading" | "analyzing" | "success" | "error";
 
@@ -59,44 +60,49 @@ export default function CatatNotaPage() {
       setScanState("analyzing");
       setProgress(75);
 
-      // Simulasi ekstraksi AI (atau panggil Gemini Flash Vision jika online)
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // Ekstraksi nyata lewat Gemini Vision (backend /ai/receipt/extract).
+      // Sebelumnya blok ini hanya setTimeout + data hardcoded, sehingga
+      // SETIAP foto nota menghasilkan Rp85.000 yang sama.
+      const mimeType = (dataUrl.match(/^data:([^;]+);/) || [])[1] || "image/jpeg";
+      const res = await processReceiptImage(dataUrl, mimeType);
+
+      if (!res.success || !res.data) {
+        throw new Error(res.error || "Gagal membaca nota");
+      }
+
+      const ai = res.data;
       setProgress(100);
 
-      // Mock OCR cerdas berdasarkan nota umum UMKM
-      const mockResult = {
-        type: "expense" as const,
-        amount: 85000,
-        category: "Bahan Baku",
-        note: "Belanja Toko Sembako Barokah",
-        transactionDate: new Date().toISOString().split("T")[0],
-        items: [
-          { name: "Minyak Goreng 2L", qty: 1, price: 34000 },
-          { name: "Telur Ayam 1kg", qty: 1, price: 28000 },
-          { name: "Bawang Merah 500gr", qty: 1, price: 23000 },
-        ],
-        vendor: "Toko Sembako Barokah",
-        confidence: 0.88,
-        lowConfidenceFields: [],
-      };
+      // Tanpa nominal, draft tidak berguna — lebih baik gagal jelas
+      // daripada menyimpan angka 0 yang salah.
+      if (!ai.amount || ai.amount <= 0) {
+        throw new Error(
+          "Nominal pada nota tidak terbaca. Coba foto ulang dengan cahaya lebih terang, atau catat manual."
+        );
+      }
 
       const draftId = `draft_${Date.now()}`;
       const draftPayload = {
         draftId,
         source: "receipt" as const,
         data: {
-          type: mockResult.type,
-          amount: mockResult.amount,
-          category: mockResult.category,
-          note: mockResult.note,
-          transactionDate: mockResult.transactionDate,
-          items: mockResult.items,
+          type: ai.type || "expense",
+          amount: ai.amount,
+          category: ai.type === "income" ? "Penjualan Produk" : "Bahan Baku",
+          note: ai.vendor ? `Belanja ${ai.vendor}` : "Belanja dari nota",
+          transactionDate: ai.transactionDate || new Date().toISOString().split("T")[0],
+          items: (ai.items || []).map((it) => ({
+            name: it.name,
+            qty: it.qty ?? 1,
+            price: it.price ?? 0,
+          })),
         },
         aiMeta: {
-          confidence: mockResult.confidence,
-          lowConfidenceFields: mockResult.lowConfidenceFields,
-          rawInput: `Foto nota: ${mockResult.vendor} (Total Rp 85.000)`,
+          confidence: ai.confidence ?? 0.5,
+          lowConfidenceFields: ai.lowConfidenceFields ?? [],
+          rawInput: `Nota: ${ai.vendor || "tanpa nama"} (total Rp ${(ai.total ?? ai.amount).toLocaleString("id-ID")})`,
           receiptImage: dataUrl,
+          engine: "gemini",
         },
       };
 
@@ -108,7 +114,14 @@ export default function CatatNotaPage() {
       }, 600);
     } catch (err: any) {
       console.error("Gagal memproses nota:", err);
-      setErrorMessage(err.message || "Gagal membaca nota. Silakan coba lagi.");
+      // Pemindaian nota butuh Gemini Vision, jadi offline tidak bisa.
+      // Beri pesan yang jelas + arahkan ke Catat Manual, bukan error teknis.
+      const offline = typeof navigator !== "undefined" && !navigator.onLine;
+      setErrorMessage(
+        offline
+          ? "Kamu sedang offline. Pemindaian nota butuh internet — pakai Catat Manual dulu, atau coba lagi setelah tersambung."
+          : err.message || "Gagal membaca nota. Silakan coba lagi."
+      );
       setScanState("error");
     }
   };
@@ -123,7 +136,7 @@ export default function CatatNotaPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#090A0F] text-slate-100 px-5 pt-6 pb-12 max-w-md mx-auto relative overflow-hidden flex flex-col">
+    <main className="min-h-screen bg-[#090A0F] text-slate-100 px-5 pt-6 pb-12 w-full relative overflow-hidden flex flex-col">
       {/* Hidden File Inputs */}
       <input
         ref={cameraInputRef}

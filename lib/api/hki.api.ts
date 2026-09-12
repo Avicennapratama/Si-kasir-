@@ -5,7 +5,8 @@ export async function fetchHkiValuations(businessId: string) {
 }
 
 export async function calculateHkiValuation(data: any) {
-  return await apiFetch<any>("/hki/calculate", {
+  // Backend mengekspor endpoint ini sebagai /hki/pre-valuation.
+  return await apiFetch<any>("/hki/pre-valuation", {
     method: "POST",
     body: JSON.stringify(data),
   })

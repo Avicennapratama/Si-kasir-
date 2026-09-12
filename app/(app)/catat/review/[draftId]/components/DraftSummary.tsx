@@ -33,6 +33,7 @@ export interface TransactionDraft {
     rawInput?: string;
     lowConfidenceFields: string[];
     receiptImage?: string;
+    engine?: "gemini" | "lokal";
   };
 }
 
@@ -77,6 +78,32 @@ export function DraftReviewScreen({
 
   const currentCategories =
     formData.type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+
+  // Tiga tingkat keyakinan. Tingkat terendah sengaja merah, bukan kuning:
+  // dulu parser lokal yang ngawur tetap tampil "Akurasi Tinggi 95%",
+  // sehingga user menekan Konfirmasi tanpa memeriksa.
+  const conf = draft.aiMeta.confidence;
+  const confTier = conf >= 0.85 ? "high" : conf >= 0.5 ? "medium" : "low";
+  const confStyle = {
+    high: "bg-emerald-500/[0.08] border-emerald-500/30 text-emerald-300",
+    medium: "bg-amber-500/[0.08] border-amber-500/30 text-amber-300",
+    low: "bg-rose-500/[0.1] border-rose-500/40 text-rose-300",
+  }[confTier];
+  const confIconColor = {
+    high: "text-emerald-400",
+    medium: "text-amber-400",
+    low: "text-rose-400",
+  }[confTier];
+  const confTitle = {
+    high: `Akurasi Tinggi (${Math.round(conf * 100)}%)`,
+    medium: `Periksa Ulang (${Math.round(conf * 100)}%)`,
+    low: `Ragu-ragu (${Math.round(conf * 100)}%)`,
+  }[confTier];
+  const confBody = {
+    high: "Data berhasil dibaca dengan jelas. Periksa cepat sebelum menyimpan.",
+    medium: "Beberapa field mungkin kurang jelas. Silakan koreksi sebelum simpan.",
+    low: "AI tidak yakin membaca input ini. WAJIB dicek ulang sebelum simpan.",
+  }[confTier];
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,27 +152,18 @@ export function DraftReviewScreen({
 
         {/* Confidence Banner */}
         <div
-          className={`p-3.5 rounded-2xl border backdrop-blur-md flex items-start gap-3 ${
-            draft.aiMeta.confidence >= 0.85
-              ? "bg-emerald-500/[0.08] border-emerald-500/30 text-emerald-300"
-              : "bg-amber-500/[0.08] border-amber-500/30 text-amber-300"
-          }`}
+          className={`p-3.5 rounded-2xl border backdrop-blur-md flex items-start gap-3 ${confStyle}`}
         >
-          {draft.aiMeta.confidence >= 0.85 ? (
-            <Check className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+          {confTier === "high" ? (
+            <Check className={`w-5 h-5 ${confIconColor} shrink-0 mt-0.5`} />
           ) : (
-            <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+            <AlertTriangle className={`w-5 h-5 ${confIconColor} shrink-0 mt-0.5`} />
           )}
           <div className="text-xs leading-relaxed">
-            <p className="font-semibold mb-0.5">
-              {draft.aiMeta.confidence >= 0.85
-                ? `Akurasi Tinggi (${Math.round(draft.aiMeta.confidence * 100)}%)`
-                : `Periksa Ulang (${Math.round(draft.aiMeta.confidence * 100)}%)`}
-            </p>
-            <p className="text-slate-300">
-              {draft.aiMeta.confidence >= 0.85
-                ? "Data berhasil dibaca dengan jelas. Periksa cepat sebelum menyimpan."
-                : "Beberapa field mungkin kurang jelas. Silakan koreksi sebelum simpan."}
+            <p className="font-semibold mb-0.5">{confTitle}</p>
+            <p className="text-slate-300">{confBody}</p>
+            <p className="text-slate-400 mt-1.5 text-[10px] uppercase tracking-wider">
+              Mesin: {draft.aiMeta.engine === "gemini" ? "Gemini AI" : "Parser Lokal (offline)"}
             </p>
           </div>
         </div>
@@ -224,8 +242,11 @@ export function DraftReviewScreen({
               />
             </div>
             {isLowConfidence("amount") && (
-              <p className="text-[11px] text-amber-400 mt-1 flex items-center gap-1">
-                <AlertTriangle className="w-3 h-3" /> Nominal diragukan, mohon pastikan nilainya.
+              <p className={`text-[11px] mt-1 flex items-center gap-1 ${confTier === "low" ? "text-rose-400 font-semibold" : "text-amber-400"}`}>
+                <AlertTriangle className="w-3 h-3" />
+                {confTier === "low"
+                  ? "Nominal sangat diragukan — tulis ulang angkanya sebelum simpan."
+                  : "Nominal diragukan, mohon pastikan nilainya."}
               </p>
             )}
           </div>

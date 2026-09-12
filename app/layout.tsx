@@ -31,8 +31,8 @@ export default function RootLayout({
       <body className={`${inter.className} bg-bg text-foreground antialiased selection:bg-solar-500/30 selection:text-solar-100`}>
         <AuthProvider>
           <AuthGuard>
-            {/* Desktop Simulator Frame */}
-            <div className="max-w-md mx-auto min-h-screen bg-[#090A0F] sm:border-x sm:border-white/[0.06] sm:shadow-2xl sm:shadow-black relative">
+            {/* App shell: full-bleed di HP, full width di desktop */}
+            <div className="w-full min-h-screen bg-[#090A0F] relative">
               {children}
             </div>
           </AuthGuard>

@@ -92,7 +92,7 @@ export default function AsistenPage() {
   };
 
   return (
-    <main className="flex flex-col h-screen bg-[#090A0F] text-slate-100 max-w-md mx-auto relative overflow-hidden">
+    <main className="flex flex-col h-screen bg-[#090A0F] text-slate-100 w-full relative overflow-hidden">
       {/* Background Flare */}
       <div 
         className="absolute top-[-50px] right-[-50px] w-[200px] h-[200px] rounded-full pointer-events-none blur-[100px] opacity-15"

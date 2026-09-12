@@ -50,7 +50,7 @@ export default function OnboardingPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#090A0F] text-slate-100 flex flex-col justify-between px-5 py-8 max-w-md mx-auto relative overflow-hidden">
+    <main className="min-h-screen bg-[#090A0F] text-slate-100 flex flex-col justify-between px-5 py-8 w-full relative overflow-hidden">
       {/* Solar Flare Ambient Glow */}
       <div 
         className="absolute top-[-80px] right-[-80px] w-[280px] h-[280px] rounded-full pointer-events-none blur-[100px] opacity-20"
@@ -107,7 +107,7 @@ export default function OnboardingPage() {
             <Tag className="w-3.5 h-3.5 text-slate-400" />
             <span>Kategori Usaha</span>
           </label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
             {CATEGORIES.map((cat) => {
               const isSelected = category === cat.id;
               return (

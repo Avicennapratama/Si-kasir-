@@ -1,12 +1,30 @@
-export async function processReceiptImage(imageFile: File | Blob, businessId: string) {
-  const formData = new FormData()
-  formData.append("receipt", imageFile)
-  formData.append("businessId", businessId)
+import { apiFetch } from "./client"
 
-  const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/receipt/process`
-  const res = await fetch(url, {
+export interface ReceiptExtraction {
+  type: "income" | "expense" | null
+  amount: number | null
+  vendor: string | null
+  transactionDate: string | null
+  items: Array<{ name: string; qty: number | null; price: number | null }>
+  subtotal: number | null
+  discount: number | null
+  tax: number | null
+  total: number | null
+  paymentMethod: string | null
+  confidence: number
+  lowConfidenceFields: string[]
+  imageQuality: "good" | "medium" | "poor"
+}
+
+/**
+ * Ekstraksi nota lewat Gemini Vision — backend /ai/receipt/extract.
+ *
+ * imageBase64 boleh menyertakan prefix data URL; backend membersihkannya.
+ * Tidak butuh businessId (backend tidak memverifikasi kepemilikan untuk ini).
+ */
+export async function processReceiptImage(imageBase64: string, mimeType = "image/jpeg") {
+  return await apiFetch<ReceiptExtraction>("/ai/receipt/extract", {
     method: "POST",
-    body: formData,
+    body: JSON.stringify({ imageBase64, mimeType }),
   })
-  return await res.json()
 }

@@ -109,7 +109,6 @@ export default function HkiValuationPage() {
 
   const [aiAnalysis, setAiAnalysis] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const { business } = useAuth();
 
   const handleAIAnalysis = async () => {
     setIsAnalyzing(true);
@@ -206,7 +205,7 @@ export default function HkiValuationPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#090A0F] text-slate-100 px-4 sm:px-5 pt-6 pb-28 max-w-md mx-auto relative overflow-hidden">
+    <main className="min-h-screen bg-[#090A0F] text-slate-100 px-4 sm:px-5 pt-6 pb-28 w-full relative overflow-hidden">
       {/* Background Solar Ambient Flare */}
       <div
         className="absolute top-[-90px] left-1/2 -translate-x-1/2 w-[340px] h-[340px] rounded-full pointer-events-none blur-[130px] opacity-15"
@@ -443,7 +442,7 @@ export default function HkiValuationPage() {
       </div>
 
       {/* Sticky Footer */}
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md p-4 bg-[#090A0F]/80 backdrop-blur-md border-t border-white/[0.08] z-50">
+      <div className="fixed bottom-0 left-0 right-0 w-full p-4 bg-[#090A0F]/80 backdrop-blur-md border-t border-white/[0.08] z-50">
         <div className="flex gap-3">
           <button
             type="button"

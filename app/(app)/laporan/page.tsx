@@ -333,7 +333,7 @@ export default function LaporanPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#090A0F] text-slate-100 px-4 sm:px-5 pt-5 pb-28 max-w-md mx-auto relative overflow-hidden print:p-0 print:max-w-none print:bg-white print:text-black">
+    <main className="min-h-screen bg-[#090A0F] text-slate-100 px-4 sm:px-5 pt-5 pb-28 w-full relative overflow-hidden print:p-0 print:max-w-none print:bg-white print:text-black">
       {/* Background Solar Ambient Flare (Hide on Print) */}
       <div
         className="absolute top-[-80px] left-1/2 -translate-x-1/2 w-[320px] h-[320px] rounded-full pointer-events-none blur-[120px] opacity-15 print:hidden"
@@ -358,7 +358,7 @@ export default function LaporanPage() {
       </div>
 
       {/* Pemilih Periode Tab (Mingguan / Bulanan / Tahunan) (Hide on Print) */}
-      <div className="grid grid-cols-3 gap-1 p-1 rounded-2xl bg-white/[0.03] border border-white/[0.06] mb-5 print:hidden">
+      <div className="grid grid-cols-3 gap-1 p-1 rounded-2xl bg-white/[0.03] border border-white/[0.06] mb-5 print:hidden max-w-md">
         <button
           type="button"
           onClick={() => setPeriod("weekly")}

@@ -1,7 +1,8 @@
 import { apiFetch } from "./client"
 
 export async function fetchGamificationStats(businessId: string) {
-  return await apiFetch<any>(`/gamification/stats?businessId=${businessId}`)
+  // Backend mengekspor endpoint ini sebagai /gamification/status.
+  return await apiFetch<any>(`/gamification/status?businessId=${businessId}`)
 }
 
 export async function claimBadge(businessId: string, badgeId: string) {

@@ -94,7 +94,7 @@ export function BottomNav() {
 
       {/* --- Bottom Navigation Bar --- */}
       <nav className="fixed bottom-0 left-0 right-0 z-30 pb-[env(safe-area-inset-bottom)] bg-black/80 backdrop-blur-xl border-t border-white/[0.08]">
-        <div className="flex items-center justify-around h-16 max-w-md mx-auto relative px-2">
+        <div className="flex items-center justify-around h-16 w-full max-w-lg mx-auto relative px-2">
           
           {/* Menu 1: Beranda */}
           <button 

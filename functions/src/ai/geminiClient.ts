@@ -22,7 +22,8 @@ import {
 
 export { SUPPORTED_IMAGE_MIME_TYPES };
 
-const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 export interface GeminiReceiptResult {
   type: 'income' | 'expense' | null;
@@ -86,28 +87,47 @@ export class GeminiClient {
     return key;
   }
 
+  /**
+   * POST ke Gemini dengan rotasi key: kalau satu key kena 429/5xx, coba key
+   * berikutnya. 4xx lain (400/403) berarti permintaan atau key-nya salah —
+   * retry tidak akan menolong.
+   */
+  private async post(body: unknown): Promise<any> {
+    const attempts = Math.max(1, this.apiKeys.length);
+    let status = 0;
+    let detail = '';
+    for (let i = 0; i < attempts; i++) {
+      const res = await fetch(`${ENDPOINT}?key=${this.getNextKey()}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) return res.json();
+      status = res.status;
+      detail = await res.text().catch(() => '');
+      if (status !== 429 && status < 500) break;
+    }
+    throw new Error(`Gemini API error ${status}: ${detail.slice(0, 300)}`);
+  }
+
   /** Panggilan mentah ke Gemini. `parts` mengikuti format Generative Language API. */
   private async call(parts: unknown[], maxTokens = GEMINI_MAX_TOKENS): Promise<string> {
-    const key = this.getNextKey();
-    const res = await fetch(`${ENDPOINT}?key=${key}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts }],
-        generationConfig: {
-          temperature: GEMINI_TEMPERATURE,
-          maxOutputTokens: maxTokens,
-          responseMimeType: 'application/json',
-        },
-      }),
-    });
-
-    if (!res.ok) {
-      const detail = await res.text().catch(() => '');
-      throw new Error(`Gemini API error ${res.status}: ${detail.slice(0, 300)}`);
+    const generationConfig: Record<string, unknown> = {
+      temperature: GEMINI_TEMPERATURE,
+      maxOutputTokens: maxTokens,
+      responseMimeType: 'application/json',
+    };
+    // Tugas ekstraksi bersifat deterministik. Matikan "thinking" di 2.5 agar
+    // token tidak habis untuk penalaran dan JSON tidak terpotong.
+    if (GEMINI_MODEL.startsWith('gemini-2.5')) {
+      generationConfig.thinkingConfig = { thinkingBudget: 0 };
     }
 
-    const data = (await res.json()) as any;
+    const data = await this.post({
+      contents: [{ parts }],
+      generationConfig,
+    });
+
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!text) throw new Error('Gemini tidak mengembalikan konten');
     return text;
@@ -116,20 +136,33 @@ export class GeminiClient {
   /** Prompt bebas, balasan teks biasa (dipakai asisten chat). */
   async generateText(prompt: string, maxTokens = GEMINI_MAX_TOKENS): Promise<string> {
     if (!this.isConfigured) throw new Error('GEMINI_API_KEY not configured');
-    const key = this.getNextKey();
-    const res = await fetch(`${ENDPOINT}?key=${key}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.7, maxOutputTokens: maxTokens },
-      }),
+    const data = await this.post({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: maxTokens,
+        ...(GEMINI_MODEL.startsWith('gemini-2.5') ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
+      },
     });
-    if (!res.ok) {
-      const detail = await res.text().catch(() => '');
-      throw new Error(`Gemini API error ${res.status}: ${detail.slice(0, 300)}`);
-    }
-    const data = (await res.json()) as any;
+    return data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  }
+
+  /**
+   * Prompt yang wajib membalas JSON valid (dipakai generator caption).
+   * Berbeda dari generateText: responseMimeType json + thinking dimatikan,
+   * supaya token tidak habis untuk penalaran dan JSON tidak terpotong.
+   */
+  async generateJson(prompt: string, maxTokens = 1200): Promise<string> {
+    if (!this.isConfigured) throw new Error('GEMINI_API_KEY not configured');
+    const data = await this.post({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: GEMINI_TEMPERATURE,
+        maxOutputTokens: maxTokens,
+        responseMimeType: 'application/json',
+        ...(GEMINI_MODEL.startsWith('gemini-2.5') ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
+      },
+    });
     return data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
   }
 

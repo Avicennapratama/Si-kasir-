@@ -1,14 +1,24 @@
 import { apiFetch } from "./client"
 
-export async function processVoiceInput(audioBlob: Blob, businessId: string) {
-  const formData = new FormData()
-  formData.append("audio", audioBlob)
-  formData.append("businessId", businessId)
+export interface VoiceExtraction {
+  type: "income" | "expense" | null
+  amount: number | null
+  note: string | null
+  transactionDate: string | null
+  items: Array<{ name: string; qty: number | null; price: number | null }>
+  confidence: number
+  lowConfidenceFields: string[]
+}
 
-  const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/voice/process`
-  const res = await fetch(url, {
+/**
+ * Ekstraksi transaksi dari transkrip suara — backend /ai/voice/extract.
+ *
+ * Kirim TEKS transkrip, bukan audio: transkrip sudah dibuat di browser
+ * (Web Speech API), dan Gemini hanya perlu menafsirkan angkanya.
+ */
+export async function processVoiceInput(transcript: string) {
+  return await apiFetch<VoiceExtraction>("/ai/voice/extract", {
     method: "POST",
-    body: formData,
+    body: JSON.stringify({ transcript }),
   })
-  return await res.json()
 }

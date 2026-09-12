@@ -39,17 +39,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const fetchBusiness = async (uid: string) => {
     try {
       const userDoc = await getDoc(doc(db, "users", uid));
+      console.log("[auth] user doc exists:", userDoc.exists(), userDoc.exists() ? userDoc.data() : null);
       if (userDoc.exists() && userDoc.data().businessId) {
         const bId = userDoc.data().businessId;
         const bDoc = await getDoc(doc(db, "businesses", bId));
+        console.log("[auth] business doc exists:", bDoc.exists());
         if (bDoc.exists()) {
           setBusiness({ id: bId, ...bDoc.data() } as BusinessProfile);
+          return;
         }
-      } else {
-        setBusiness(null);
       }
+      setBusiness(null);
     } catch (e) {
-      console.error("Failed to load business profile", e);
+      console.error("[auth] Failed to load business profile:", e);
+      setBusiness(null);
     }
   };
 
@@ -62,6 +65,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           document.cookie = `auth-token=${token}; path=/; max-age=86400; SameSite=Lax`;
         } catch (e) {
           console.warn("Could not get ID token for cookie", e);
+        }
+        // Self-healing: pastikan user doc ada (idempotent).
+        // Menutup kasus user yang login saat rules masih deny sehingga
+        // setDoc di signInWithGoogle gagal dan doc tidak pernah dibuat.
+        try {
+          const userRef = doc(db, "users", currentUser.uid);
+          const snap = await getDoc(userRef);
+          if (!snap.exists()) {
+            await setDoc(userRef, {
+              uid: currentUser.uid,
+              email: currentUser.email,
+              displayName: currentUser.displayName,
+              photoURL: currentUser.photoURL,
+              createdAt: new Date(),
+            });
+            console.log("[auth] user doc created via self-healing");
+          }
+        } catch (e) {
+          console.error("[auth] Failed to ensure user doc:", e);
         }
         await fetchBusiness(currentUser.uid);
       } else {

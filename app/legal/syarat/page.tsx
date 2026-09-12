@@ -8,7 +8,7 @@ export default function SyaratKetentuanPage() {
   const router = useRouter();
 
   return (
-    <main className="min-h-screen bg-[#090A0F] text-slate-100 px-4 sm:px-5 pt-6 pb-20 max-w-md mx-auto relative overflow-hidden">
+    <main className="min-h-screen bg-[#090A0F] text-slate-100 px-4 sm:px-5 pt-6 pb-20 w-full relative overflow-hidden">
       {/* Background Glow */}
       <div
         className="absolute top-[-90px] left-[-40px] w-[260px] h-[260px] rounded-full pointer-events-none blur-[120px] opacity-15"

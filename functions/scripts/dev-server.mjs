@@ -13,6 +13,11 @@ import { config } from 'dotenv';
 
 config({ path: new URL('../.env', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1') });
 
+// Dev-server berjalan di luar Firebase runtime, jadi Google Auth butuh tahu
+// project-nya secara eksplisit (di produksi ini disediakan oleh runtime).
+process.env.GCLOUD_PROJECT ||= process.env.FIREBASE_PROJECT_ID || 'kasir-2a2c6';
+process.env.FIREBASE_CONFIG ||= JSON.stringify({ projectId: process.env.GCLOUD_PROJECT });
+
 const { setupRoutes } = await import('../lib/routes/index.js');
 const { errorHandler } = await import('../lib/middleware/errorHandler.js');
 const { requestLogger } = await import('../lib/middleware/requestLogger.js');

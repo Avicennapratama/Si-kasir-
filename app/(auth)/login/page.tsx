@@ -38,7 +38,7 @@ export default function LoginPage() {
       />
 
       {/* Main Container 343px */}
-      <div className="w-full max-w-[343px] flex flex-col flex-1 relative z-10 pt-safe-top pb-safe-bottom">
+      <div className="w-full w-full max-w-lg sm:max-w-xl flex flex-col flex-1 relative z-10 pt-safe-top pb-safe-bottom">
         
         {/* Area Atas: Logo & Judul Aplikasi (Posisi 16px dari safe top, padding horizontal ditangani oleh max-w) */}
         <header className="flex items-center gap-4 pt-4 mt-[16px]">

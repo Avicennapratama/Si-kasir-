@@ -53,7 +53,7 @@ export function DraftReviewScreen({
   };
 
   return (
-    <div className="p-4 space-y-4 max-w-md mx-auto">
+    <div className="p-4 space-y-4 w-full">
       {/* Header */}
       <div className="flex items-center justify-between border-b pb-3">
         <div className="flex items-center gap-2">
@@ -94,7 +94,7 @@ export function DraftReviewScreen({
           <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
             Tipe
           </label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 max-w-sm">
             <button
               type="button"
               onClick={() => setFormData({ ...formData, type: "income" })}
@@ -223,7 +223,7 @@ export function DraftReviewScreen({
             )}
           </button>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 max-w-sm">
             <button
               type="button"
               onClick={onReject}

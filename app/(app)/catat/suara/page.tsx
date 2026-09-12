@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Mic, Square, ArrowLeft, Keyboard, AlertTriangle, Sparkles } from "lucide-react";
 import { useAuth } from "@/lib/firebase/auth-context";
 import { parseIndonesianVoice } from "@/lib/ai/voice-parser";
+import { processVoiceInput } from "@/lib/api/voice.api";
 
 type PageState = "idle" | "recording" | "processing";
 type ErrorModal = "permission" | "silent" | "failed" | null;
@@ -178,9 +179,44 @@ export default function CatatSuaraPage() {
         return;
       }
 
-      // 1. Ekstraksi via parser bahasa Indonesia lokal (0 rupiah, zero credential leak)
-      const inputTranscript = liveText.trim() || "Laku dua porsi mie ayam tiga puluh ribu";
-      const parsed = parseIndonesianVoice(inputTranscript);
+      // Transkrip wajib ada. Sebelumnya bila kosong kode memakai kalimat
+      // contoh hardcoded — user merekam tanpa bicara lalu mendapat transaksi
+      // "mie ayam 30 ribu" palsu yang masuk pembukuan.
+      const inputTranscript = liveText.trim();
+      if (!inputTranscript) {
+        setState("idle");
+        setErrorModal("silent");
+        return;
+      }
+
+      // Kategori tidak dikembalikan Gemini, jadi parser lokal yang
+      // menentukannya — murni pencocokan kata kunci, deterministik, 0.09ms.
+      const localGuess = parseIndonesianVoice(inputTranscript);
+
+      // Gemini dulu (95.8% pada kasus sulit); parser lokal jadi fallback offline.
+      let engine: "gemini" | "lokal" = "lokal";
+      let parsed = localGuess;
+
+      if (typeof navigator !== "undefined" && navigator.onLine) {
+        const remote = await processVoiceInput(inputTranscript);
+        if (remote.success && remote.data && remote.data.amount && remote.data.amount > 0) {
+          engine = "gemini";
+          parsed = {
+            type: remote.data.type || localGuess.type,
+            amount: remote.data.amount,
+            note: remote.data.note || inputTranscript,
+            category: localGuess.category,
+            items: (remote.data.items || []).map((it) => ({
+              name: it.name,
+              qty: it.qty ?? 1,
+              price: it.price ?? 0,
+            })),
+            confidence: remote.data.confidence ?? 0.9,
+            lowConfidenceFields: remote.data.lowConfidenceFields ?? [],
+            rawTranscript: inputTranscript,
+          };
+        }
+      }
 
       // Simpan draft transaksi terstandar ke sessionStorage
       const draftId = `draft_${Date.now()}`;
@@ -199,6 +235,7 @@ export default function CatatSuaraPage() {
           confidence: parsed.confidence,
           lowConfidenceFields: parsed.lowConfidenceFields,
           rawInput: parsed.rawTranscript,
+          engine,
         },
       };
 
@@ -216,7 +253,7 @@ export default function CatatSuaraPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#090A0F] text-slate-100 px-5 pt-6 pb-10 max-w-md mx-auto relative overflow-hidden flex flex-col">
+    <main className="min-h-screen bg-[#090A0F] text-slate-100 px-5 pt-6 pb-10 w-full relative overflow-hidden flex flex-col">
       {/* Background Solar Glow */}
       <div
         className={`absolute top-[-100px] left-1/2 -translate-x-1/2 w-[340px] h-[340px] rounded-full pointer-events-none blur-[130px] transition-opacity duration-700 ${

@@ -100,7 +100,7 @@ export default function ReviewDraftPage() {
 
   return (
     <main className="min-h-screen bg-[#090A0F] flex justify-center">
-      <div className="w-full max-w-md bg-[#090A0F] shadow-2xl">
+      <div className="w-full bg-[#090A0F] shadow-2xl">
         <DraftReviewScreen
           draft={draft}
           onConfirm={handleConfirm}

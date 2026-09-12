@@ -18,8 +18,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Redirect authenticated users away from auth pages to dashboard
-  if (isAuthenticated && isPublic) {
+  // Redirect authenticated users away from LOGIN page only.
+  // /onboarding harus tetap bisa diakses user terautentikasi — itu tempat
+  // mereka membuat business profile setelah login pertama.
+  if (isAuthenticated && pathname.startsWith('/login')) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 

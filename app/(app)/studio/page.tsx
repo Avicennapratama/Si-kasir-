@@ -364,7 +364,7 @@ export default function StudioPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#090A0F] text-slate-100 px-4 sm:px-5 pt-6 pb-28 max-w-md mx-auto relative overflow-hidden">
+    <main className="min-h-screen bg-[#090A0F] text-slate-100 px-4 sm:px-5 pt-6 pb-28 w-full relative overflow-hidden">
       {/* Hidden Canvas untuk proses pixel rendering */}
       <canvas ref={canvasRef} className="hidden" />
 
@@ -514,7 +514,7 @@ export default function StudioPage() {
               <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
                 Kategori Usaha
               </label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-2 max-w-md">
                 {["Kuliner", "Kriya / Fashion", "Jasa & Lainnya"].map((cat) => (
                   <button
                     key={cat}
@@ -538,7 +538,7 @@ export default function StudioPage() {
             <label className="block text-[14px] font-bold text-white mb-2.5">
               2. Pilih Gaya Studio
             </label>
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
               {STUDIO_PRESETS.map((preset) => {
                 const isSelected = selectedPreset === preset.id;
                 return (
@@ -768,6 +768,7 @@ export default function StudioPage() {
               <span>Buat Foto Produk Lain</span>
             </button>
           </div>
+        </div>
         </div>
       )}
     </main>

@@ -98,7 +98,7 @@ export default function GamifikasiPage() {
   const calendarDays = generateCalendarDays(currentStreak);
 
   return (
-    <main className="min-h-screen bg-[#090A0F] text-slate-100 px-4 sm:px-5 pt-6 pb-28 max-w-md mx-auto relative overflow-hidden">
+    <main className="min-h-screen bg-[#090A0F] text-slate-100 px-4 sm:px-5 pt-6 pb-28 w-full relative overflow-hidden">
       {/* Ambient Flare */}
       <div
         className="absolute top-[-90px] left-1/2 -translate-x-1/2 w-[340px] h-[340px] rounded-full pointer-events-none blur-[120px] opacity-15"
@@ -211,7 +211,7 @@ export default function GamifikasiPage() {
         </div>
 
         {/* Badge Cards Grid */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {BADGES.map((badge) => {
             const isUnlocked = unlockedBadges.has(badge.id);
             const badgeData = achievements.find((a: any) => a.id === badge.id);

@@ -38,6 +38,21 @@ export default function DashboardPage() {
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [isOnline, setIsOnline] = useState(true);
+
+  // navigator tidak tersedia saat SSR — cek di client saja
+  useEffect(() => {
+    setIsOnline(navigator.onLine);
+    const on = () => setIsOnline(true);
+    const off = () => setIsOnline(false);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => {
+      window.removeEventListener("online", on);
+      window.removeEventListener("offline", off);
+    };
+  }, []);
+
   // Load Real Data from Firestore
   useEffect(() => {
     if (!user) return;
@@ -110,7 +125,7 @@ export default function DashboardPage() {
   const netBalance = todayIncome - todayExpense;
 
   return (
-    <main className="min-h-screen bg-[#090A0F] text-slate-100 px-5 pt-6 pb-28 max-w-md mx-auto relative overflow-hidden">
+    <main className="min-h-screen bg-[#090A0F] text-slate-100 px-5 sm:px-8 lg:px-10 pt-6 pb-28 w-full relative overflow-hidden">
       {/* Background Solar Flare Ambient Glow */}
       <div 
         className="absolute top-[-100px] left-1/2 -translate-x-1/2 w-[350px] h-[350px] rounded-full pointer-events-none blur-[140px] opacity-20"
@@ -133,7 +148,7 @@ export default function DashboardPage() {
             <div className="flex items-center gap-1.5 mt-0.5">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
               <span className="text-xs text-slate-400 font-medium capitalize">
-                {navigator.onLine ? "Online" : "Offline"}
+                {isOnline ? "Online" : "Offline"}
               </span>
             </div>
           </div>
